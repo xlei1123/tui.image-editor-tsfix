@@ -94,13 +94,14 @@ declare namespace tuiImageEditor {
     fontFamily?: string;
     fontSize?: number;
     fontStyle?: string;
-    fontWeight?: string;
+    fontWeight?: number | string;
     textAlign?: string;
     textDecoration?: string;
     strokeWidth?: number;
     stroke?: string;
     shadow?: string;
     textBackgroundColor?: string;
+    linethrough?: boolean;
   }
 
   interface IRectConfig {
