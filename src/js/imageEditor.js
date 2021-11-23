@@ -644,7 +644,6 @@ class ImageEditor {
   execute(commandName, ...args) {
     // Inject an Graphics instance as first parameter
     const theArgs = [this._graphics].concat(args);
-
     return this._invoker.execute(commandName, ...theArgs);
   }
 
@@ -916,10 +915,10 @@ class ImageEditor {
    */
   _rotate(type, angle, isSilent) {
     let result = null;
-
     if (isSilent) {
       result = this.executeSilent(commands.ROTATE_IMAGE, type, angle);
     } else {
+
       result = this.execute(commands.ROTATE_IMAGE, type, angle);
     }
 

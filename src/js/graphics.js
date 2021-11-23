@@ -1351,6 +1351,8 @@ class Graphics {
       'textAlign',
       'textDecoration',
       'fontWeight',
+      'scaleX',
+      'scaleY'
     ];
     const props = {};
     extend(props, getProperties(obj, predefinedKeys));
