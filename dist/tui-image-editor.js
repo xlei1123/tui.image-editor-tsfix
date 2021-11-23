@@ -36967,7 +36967,6 @@ exports.default = {
             underline = _ui$text.underline;
 
         var fontFamily = 'Noto Sans';
-
         _this12.addText('Double Click', {
           position: pos.originPosition,
           styles: { fill: fill, fontSize: fontSize, fontFamily: fontFamily, fontStyle: fontStyle, fontWeight: fontWeight, underline: underline }
@@ -39200,7 +39199,6 @@ var Cropper = function (_Component) {
     value: function setCropzoneRect(presetRatio) {
       var canvas = this.getCanvas();
       var cropzone = this._cropzone;
-
       canvas.discardActiveObject();
       canvas.selection = false;
       canvas.remove(cropzone);
@@ -47465,7 +47463,7 @@ var Graphics = function () {
   }, {
     key: '_createTextProperties',
     value: function _createTextProperties(obj) {
-      var predefinedKeys = ['text', 'fontFamily', 'fontSize', 'fontStyle', 'textAlign', 'textDecoration', 'fontWeight'];
+      var predefinedKeys = ['text', 'fontFamily', 'fontSize', 'fontStyle', 'textAlign', 'textDecoration', 'fontWeight', 'scaleX', 'scaleY'];
       var props = {};
       extend(props, (0, _util.getProperties)(obj, predefinedKeys));
 
@@ -50686,7 +50684,6 @@ var ImageEditor = function () {
 
       // Inject an Graphics instance as first parameter
       var theArgs = [this._graphics].concat(args);
-
       return (_invoker = this._invoker).execute.apply(_invoker, [commandName].concat(theArgs));
     }
 
@@ -51034,10 +51031,10 @@ var ImageEditor = function () {
     key: '_rotate',
     value: function _rotate(type, angle, isSilent) {
       var result = null;
-
       if (isSilent) {
         result = this.executeSilent(_consts.commandNames.ROTATE_IMAGE, type, angle);
       } else {
+
         result = this.execute(_consts.commandNames.ROTATE_IMAGE, type, angle);
       }
 

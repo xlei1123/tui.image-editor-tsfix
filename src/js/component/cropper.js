@@ -308,7 +308,6 @@ class Cropper extends Component {
   setCropzoneRect(presetRatio) {
     const canvas = this.getCanvas();
     const cropzone = this._cropzone;
-
     canvas.discardActiveObject();
     canvas.selection = false;
     canvas.remove(cropzone);
