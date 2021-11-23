@@ -1316,6 +1316,8 @@ class Graphics {
       'strokeWidth',
       'opacity',
       'angle',
+      'scaleX', 
+      'scaleY'
     ];
     const props = {
       id: stamp(obj),
