@@ -47433,7 +47433,7 @@ var Graphics = function () {
   }, {
     key: 'createObjectProperties',
     value: function createObjectProperties(obj) {
-      var predefinedKeys = ['left', 'top', 'width', 'height', 'fill', 'stroke', 'strokeWidth', 'opacity', 'angle'];
+      var predefinedKeys = ['left', 'top', 'width', 'height', 'fill', 'stroke', 'strokeWidth', 'opacity', 'angle', 'scaleX', 'scaleY'];
       var props = {
         id: stamp(obj),
         type: obj.type
