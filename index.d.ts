@@ -326,6 +326,7 @@ declare namespace tuiImageEditor {
     public toDataURL(options?: IToDataURLOptions): string;
     public undo(): Promise<any>;
     public on(eventName: string, handler: (...args: any[]) => void): void;
+    public _cropAction(): { modeChange(mode: string): void };
   }
 }
 
