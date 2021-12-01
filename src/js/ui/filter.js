@@ -275,6 +275,7 @@ class Filter extends Submenu {
         checkboxGroup.classList.add('tui-image-editor-disabled');
       }
     }
+    console.log(applyFilter, apply, type, this._getFilterOption(filterName));
     applyFilter(apply, type, this._getFilterOption(filterName), !isLast);
   }
 
