@@ -1492,6 +1492,7 @@ class ImageEditor {
    * });;
    */
   applyFilter(type, options, isSilent) {
+    console.log('type===>', type);
     const executeMethodName = isSilent ? 'executeSilent' : 'execute';
 
     return this[executeMethodName](commands.APPLY_FILTER, type, options);
