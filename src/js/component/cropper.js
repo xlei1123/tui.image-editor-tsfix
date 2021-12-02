@@ -105,10 +105,10 @@ class Cropper extends Component {
 
     canvas.discardActiveObject();
     canvas.add(this._cropzone);
+    // @layxiang 去掉鼠标拖动自由裁剪
     // canvas.on('mouse:down', this._listeners.mousedown);
     canvas.selection = false;
     // canvas.defaultCursor = 'crosshair';
-
     fabric.util.addListener(document, 'keydown', this._listeners.keydown);
     fabric.util.addListener(document, 'keyup', this._listeners.keyup);
   }
@@ -242,7 +242,6 @@ class Cropper extends Component {
     const cropzone = this._cropzone;
     const listeners = this._listeners;
     const canvas = this.getCanvas();
-
     canvas.setActiveObject(cropzone);
     canvas.off({
       'mouse:move': listeners.mousemove,
@@ -311,15 +310,15 @@ class Cropper extends Component {
     canvas.discardActiveObject();
     canvas.selection = false;
     canvas.remove(cropzone);
-
-    cropzone.set(presetRatio ? this._getPresetPropertiesForCropSize(presetRatio) : DEFAULT_OPTION);
-
+    // @layxiang 自由裁剪
+    // cropzone.set(presetRatio ? this._getPresetPropertiesForCropSize(presetRatio) : DEFAULT_OPTION);
+    cropzone.set(this._getPresetPropertiesForCropSize(presetRatio))
     canvas.add(cropzone);
     canvas.selection = true;
-
-    if (presetRatio) {
-      canvas.setActiveObject(cropzone);
-    }
+    canvas.setActiveObject(cropzone);
+    // if (presetRatio) {
+    //   canvas.setActiveObject(cropzone);
+    // }
   }
 
   /**
@@ -329,14 +328,19 @@ class Cropper extends Component {
    * @private
    */
   _getPresetPropertiesForCropSize(presetRatio) {
+    // @layxiang 自由裁剪
+    let free;
+    if (!presetRatio) {
+      free = 1
+    }
     const canvas = this.getCanvas();
     const originalWidth = canvas.getWidth();
     const originalHeight = canvas.getHeight();
 
     const standardSize = originalWidth >= originalHeight ? originalWidth : originalHeight;
     const getScale = (value, orignalValue) => (value > orignalValue ? orignalValue / value : 1);
-
-    let width = standardSize * presetRatio;
+    // @layxiang 自由裁剪
+    let width = standardSize * (free || presetRatio);
     let height = standardSize;
 
     const scaleWidth = getScale(width, originalWidth);
