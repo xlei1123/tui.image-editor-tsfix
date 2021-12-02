@@ -393,7 +393,6 @@ class Graphics {
    * @param {Object} style - Selection styles
    */
   setCropSelectionStyle(style) {
-    console.log(style);
     this.cropSelectionStyle = style;
   }
 
