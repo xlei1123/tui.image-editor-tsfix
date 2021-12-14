@@ -26,8 +26,14 @@ class Component {
   }
 
   /**
-   * Fire Graphics event
+   * Fire Graphics event  触发自定义事件
    * @returns {Object} return value
+   * 
+   * canvas.on({
+   *  "自定义事件名": o => {
+   *    // o: (any: 'payload')
+   *  }
+   * })
    */
   fire(...args) {
     const context = this.graphics;

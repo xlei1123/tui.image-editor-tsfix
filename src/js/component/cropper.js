@@ -154,7 +154,6 @@ class Cropper extends Component {
    */
   _onFabricMouseDown(fEvent) {
     const canvas = this.getCanvas();
-
     if (fEvent.target) {
       return;
     }
