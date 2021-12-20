@@ -766,12 +766,12 @@ class ImageEditor {
    *     console.log(ojectProps.id);
    * });
    */
-  addImageObject(imgUrl) {
+  addImageObject(imgUrl, scale) {
     if (!imgUrl) {
       return Promise.reject(rejectMessages.invalidParameters);
     }
 
-    return this.execute(commands.ADD_IMAGE_OBJECT, imgUrl);
+    return this.execute(commands.ADD_IMAGE_OBJECT, imgUrl, scale);
   }
 
   /**
