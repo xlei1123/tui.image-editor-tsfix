@@ -676,14 +676,14 @@ class Graphics {
    * @param {string} imgUrl - Image url to make object
    * @returns {Promise}
    */
-  addImageObject(imgUrl) {
+  addImageObject(imgUrl, scale) {
     const callback = this._callbackAfterLoadingImageObject.bind(this);
 
     return new Promise((resolve) => {
       fabric.Image.fromURL(
         imgUrl,
         (image) => {
-          callback(image);
+          callback(image, scale);
           resolve(this.createObjectProperties(image));
         },
         {
@@ -1069,15 +1069,17 @@ class Graphics {
    * @param {fabric.Image} obj - Fabric image object
    * @private
    */
-  _callbackAfterLoadingImageObject(obj) {
+  _callbackAfterLoadingImageObject(obj, scale=1) {
     const centerPos = this.getCanvasImage().getCenterPoint();
-
     obj.set(fObjectOptions.SELECTION_STYLE);
     obj.set({
       left: centerPos.x,
       top: centerPos.y,
       crossOrigin: 'Anonymous',
     });
+    const _height = Math.floor(70 * scale);
+    obj.scaleToHeight(_height);
+    obj.scaleToWidth(Math.floor(obj.width / obj.height * _height));
 
     this.getCanvas().add(obj).setActiveObject(obj);
   }

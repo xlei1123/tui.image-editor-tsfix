@@ -15,8 +15,8 @@ const command = {
    * @param {string} imgUrl - Image url to make object
    * @returns {Promise}
    */
-  execute(graphics, imgUrl) {
-    return graphics.addImageObject(imgUrl).then((objectProps) => {
+  execute(graphics, imgUrl, scale) {
+    return graphics.addImageObject(imgUrl, scale).then((objectProps) => {
       this.undoData.object = graphics.getObject(objectProps.id);
 
       return objectProps;

@@ -87,6 +87,7 @@ declare namespace tuiImageEditor {
       x: number;
       y: number;
     };
+    autofocus?: boolean;
   }
 
   interface ITextStyleConfig {

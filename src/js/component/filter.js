@@ -45,7 +45,6 @@ class Filter extends Component {
       if (!imgFilter) {
         imgFilter = this._createFilter(sourceImg, type, options);
       }
-      console.log('imgFilter===>', options);
       if (!imgFilter) {
         reject(rejectMessages.invalidParameters);
       }
