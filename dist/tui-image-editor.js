@@ -37192,10 +37192,10 @@ var command = {
    * @param {string} imgUrl - Image url to make object
    * @returns {Promise}
    */
-  execute: function execute(graphics, imgUrl) {
+  execute: function execute(graphics, imgUrl, scale) {
     var _this = this;
 
-    return graphics.addImageObject(imgUrl).then(function (objectProps) {
+    return graphics.addImageObject(imgUrl, scale).then(function (objectProps) {
       _this.undoData.object = graphics.getObject(objectProps.id);
 
       return objectProps;
@@ -38967,10 +38967,10 @@ var Cropper = function (_Component) {
 
       canvas.discardActiveObject();
       canvas.add(this._cropzone);
-      canvas.on('mouse:down', this._listeners.mousedown);
+      // @layxiang 去掉鼠标拖动自由裁剪
+      // canvas.on('mouse:down', this._listeners.mousedown);
       canvas.selection = false;
-      canvas.defaultCursor = 'crosshair';
-
+      // canvas.defaultCursor = 'crosshair';
       _fabric.fabric.util.addListener(document, 'keydown', this._listeners.keydown);
       _fabric.fabric.util.addListener(document, 'keyup', this._listeners.keyup);
     }
@@ -39025,7 +39025,6 @@ var Cropper = function (_Component) {
     key: '_onFabricMouseDown',
     value: function _onFabricMouseDown(fEvent) {
       var canvas = this.getCanvas();
-
       if (fEvent.target) {
         return;
       }
@@ -39124,7 +39123,6 @@ var Cropper = function (_Component) {
       var cropzone = this._cropzone;
       var listeners = this._listeners;
       var canvas = this.getCanvas();
-
       canvas.setActiveObject(cropzone);
       canvas.off({
         'mouse:move': listeners.mousemove,
@@ -39202,15 +39200,15 @@ var Cropper = function (_Component) {
       canvas.discardActiveObject();
       canvas.selection = false;
       canvas.remove(cropzone);
-
-      cropzone.set(presetRatio ? this._getPresetPropertiesForCropSize(presetRatio) : DEFAULT_OPTION);
-
+      // @layxiang 自由裁剪
+      // cropzone.set(presetRatio ? this._getPresetPropertiesForCropSize(presetRatio) : DEFAULT_OPTION);
+      cropzone.set(this._getPresetPropertiesForCropSize(presetRatio));
       canvas.add(cropzone);
       canvas.selection = true;
-
-      if (presetRatio) {
-        canvas.setActiveObject(cropzone);
-      }
+      canvas.setActiveObject(cropzone);
+      // if (presetRatio) {
+      //   canvas.setActiveObject(cropzone);
+      // }
     }
 
     /**
@@ -39223,6 +39221,11 @@ var Cropper = function (_Component) {
   }, {
     key: '_getPresetPropertiesForCropSize',
     value: function _getPresetPropertiesForCropSize(presetRatio) {
+      // @layxiang 自由裁剪
+      var free = void 0;
+      if (!presetRatio) {
+        free = 1;
+      }
       var canvas = this.getCanvas();
       var originalWidth = canvas.getWidth();
       var originalHeight = canvas.getHeight();
@@ -39231,8 +39234,8 @@ var Cropper = function (_Component) {
       var getScale = function getScale(value, orignalValue) {
         return value > orignalValue ? orignalValue / value : 1;
       };
-
-      var width = standardSize * presetRatio;
+      // @layxiang 自由裁剪
+      var width = standardSize * (free || presetRatio);
       var height = standardSize;
 
       var scaleWidth = getScale(width, originalWidth);
@@ -39401,7 +39404,6 @@ var Filter = function (_Component) {
         if (!imgFilter) {
           imgFilter = _this2._createFilter(sourceImg, type, options);
         }
-
         if (!imgFilter) {
           reject(_consts.rejectMessages.invalidParameters);
         }
@@ -46665,14 +46667,14 @@ var Graphics = function () {
 
   }, {
     key: 'addImageObject',
-    value: function addImageObject(imgUrl) {
+    value: function addImageObject(imgUrl, scale) {
       var _this = this;
 
       var callback = this._callbackAfterLoadingImageObject.bind(this);
 
       return new _util.Promise(function (resolve) {
         _fabric.fabric.Image.fromURL(imgUrl, function (image) {
-          callback(image);
+          callback(image, scale);
           resolve(_this.createObjectProperties(image));
         }, {
           crossOrigin: 'Anonymous'
@@ -47139,14 +47141,18 @@ var Graphics = function () {
   }, {
     key: '_callbackAfterLoadingImageObject',
     value: function _callbackAfterLoadingImageObject(obj) {
-      var centerPos = this.getCanvasImage().getCenterPoint();
+      var scale = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
 
+      var centerPos = this.getCanvasImage().getCenterPoint();
       obj.set(_consts.fObjectOptions.SELECTION_STYLE);
       obj.set({
         left: centerPos.x,
         top: centerPos.y,
         crossOrigin: 'Anonymous'
       });
+      var _height = Math.floor(70 * scale);
+      obj.scaleToHeight(_height);
+      obj.scaleToWidth(Math.floor(obj.width / obj.height * _height));
 
       this.getCanvas().add(obj).setActiveObject(obj);
     }
@@ -50852,12 +50858,12 @@ var ImageEditor = function () {
 
   }, {
     key: 'addImageObject',
-    value: function addImageObject(imgUrl) {
+    value: function addImageObject(imgUrl, scale) {
       if (!imgUrl) {
         return _util.Promise.reject(_consts.rejectMessages.invalidParameters);
       }
 
-      return this.execute(_consts.commandNames.ADD_IMAGE_OBJECT, imgUrl);
+      return this.execute(_consts.commandNames.ADD_IMAGE_OBJECT, imgUrl, scale);
     }
 
     /**
@@ -51694,6 +51700,7 @@ var ImageEditor = function () {
   }, {
     key: 'applyFilter',
     value: function applyFilter(type, options, isSilent) {
+      console.log('type===>', type);
       var executeMethodName = isSilent ? 'executeSilent' : 'execute';
 
       return this[executeMethodName](_consts.commandNames.APPLY_FILTER, type, options);
@@ -52261,8 +52268,14 @@ var Component = function () {
   }
 
   /**
-   * Fire Graphics event
+   * Fire Graphics event  触发自定义事件
    * @returns {Object} return value
+   * 
+   * canvas.on({
+   *  "自定义事件名": o => {
+   *    // o: (any: 'payload')
+   *  }
+   * })
    */
 
 
@@ -55269,6 +55282,7 @@ var Filter = function (_Submenu) {
           checkboxGroup.classList.add('tui-image-editor-disabled');
         }
       }
+      console.log(applyFilter, apply, type, this._getFilterOption(filterName));
       applyFilter(apply, type, this._getFilterOption(filterName), !isLast);
     }
 
