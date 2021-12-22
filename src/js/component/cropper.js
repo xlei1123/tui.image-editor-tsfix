@@ -341,7 +341,6 @@ class Cropper extends Component {
     // @layxiang 自由裁剪
     let width = standardSize * (free || presetRatio);
     let height = standardSize;
-
     const scaleWidth = getScale(width, originalWidth);
     [width, height] = snippet.map([width, height], (sizeValue) => sizeValue * scaleWidth);
 
@@ -349,7 +348,12 @@ class Cropper extends Component {
     [width, height] = snippet.map([width, height], (sizeValue) =>
       fixFloatingPoint(sizeValue * scaleHeight)
     );
-
+    // 如果原图裁剪 本身没有意义，同时控制块会被挡住， 这里缩放一下！！
+    // 原图比例
+    if ( Number(originalWidth/originalHeight).toFixed(2) === presetRatio.toFixed(2)) {
+      width *= 0.9;
+      height *= 0.9;
+    }
     return {
       presetRatio,
       top: (originalHeight - height) / 2,
