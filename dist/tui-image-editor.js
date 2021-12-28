@@ -47031,7 +47031,8 @@ var Graphics = function () {
 
       this._canvas = new _fabric.fabric.Canvas(canvasElement, {
         containerClass: 'tui-image-editor-canvas-container',
-        enableRetinaScaling: false
+        enableRetinaScaling: false,
+        fireRightClick: true
       });
     }
 
