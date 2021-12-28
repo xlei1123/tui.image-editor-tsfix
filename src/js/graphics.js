@@ -979,6 +979,7 @@ class Graphics {
     this._canvas = new fabric.Canvas(canvasElement, {
       containerClass: 'tui-image-editor-canvas-container',
       enableRetinaScaling: false,
+      fireRightClick: true,
     });
   }
 
@@ -1318,7 +1319,7 @@ class Graphics {
       'strokeWidth',
       'opacity',
       'angle',
-      'scaleX', 
+      'scaleX',
       'scaleY'
     ];
     const props = {
