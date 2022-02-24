@@ -83,7 +83,7 @@ class Filter extends Submenu {
    */
   destroy() {
     this._removeEvent();
-    // this._destroyToolInstance(); _removeEvent中已经执行了off操作
+    this._destroyToolInstance();
 
     assignmentForDestroy(this);
   }

@@ -51701,7 +51701,6 @@ var ImageEditor = function () {
   }, {
     key: 'applyFilter',
     value: function applyFilter(type, options, isSilent) {
-      console.log('type===>', type);
       var executeMethodName = isSilent ? 'executeSilent' : 'execute';
 
       return this[executeMethodName](_consts.commandNames.APPLY_FILTER, type, options);
@@ -55062,7 +55061,7 @@ var Filter = function (_Submenu) {
     key: 'destroy',
     value: function destroy() {
       this._removeEvent();
-      // this._destroyToolInstance(); _removeEvent中已经执行了off操作
+      this._destroyToolInstance();
 
       (0, _util.assignmentForDestroy)(this);
     }
