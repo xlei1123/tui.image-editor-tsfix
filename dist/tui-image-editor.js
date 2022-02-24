@@ -55062,7 +55062,7 @@ var Filter = function (_Submenu) {
     key: 'destroy',
     value: function destroy() {
       this._removeEvent();
-      this._destroyToolInstance();
+      // this._destroyToolInstance(); _removeEvent中已经执行了off操作
 
       (0, _util.assignmentForDestroy)(this);
     }
