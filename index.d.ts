@@ -262,7 +262,7 @@ declare namespace tuiImageEditor {
     constructor(wrapper: string | Element, options: IOptions);
     public ui: UI;
     public _graphics: any;
-    
+    public persistenceData: any;
     public addIcon(type: string, options?: IIconOptions): Promise<IObjectProps>;
     public addImageObject(imgUrl: string, scale?: number): Promise<IObjectProps>
     public addShape(type: string, options?: IShapeOptions): Promise<IObjectProps>;
