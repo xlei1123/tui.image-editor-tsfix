@@ -45336,7 +45336,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         topMaker: function topMaker(newHeight) {
           return rectBottom - newHeight;
         },
-        maxWidth: canvasWidth - rectLeft,
+        maxWidth: bgRight - rectLeft,
         maxHeight: rectBottom - bgTop,
         scaleTo: 'height'
       },
@@ -45350,7 +45350,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
           return rectTop;
         },
         maxWidth: rectRight - bgLeft,
-        maxHeight: canvasHeight - rectTop,
+        maxHeight: bgBottom - rectTop,
         scaleTo: 'width'
       },
       mr: {
@@ -45363,7 +45363,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
           return rectTop;
         },
         maxWidth: bgRight - rectLeft,
-        maxHeight: canvasHeight - rectTop,
+        maxHeight: bgBottom - rectTop,
         scaleTo: 'width'
       },
       mb: {
@@ -45375,7 +45375,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         topMaker: function topMaker() {
           return rectTop;
         },
-        maxWidth: canvasWidth - rectLeft,
+        maxWidth: bgRight - rectLeft,
         maxHeight: bgBottom - rectTop,
         scaleTo: 'height'
       },
