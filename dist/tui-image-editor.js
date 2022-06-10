@@ -38249,7 +38249,9 @@ var command = {
         oldWidth: prevImageWidth,
         oldHeight: prevImageHeight,
         newWidth: newImage.width,
-        newHeight: newImage.height
+        newHeight: newImage.height,
+        scaleX: newImage.scaleX,
+        scaleY: newImage.scaleY
       };
     });
   },
@@ -38968,7 +38970,7 @@ var Cropper = function (_Component) {
       canvas.discardActiveObject();
       canvas.add(this._cropzone);
       // @layxiang 去掉鼠标拖动自由裁剪
-      // canvas.on('mouse:down', this._listeners.mousedown);
+      canvas.on('mouse:down', this._listeners.mousedown);
       canvas.selection = false;
       // canvas.defaultCursor = 'crosshair';
       _fabric.fabric.util.addListener(document, 'keydown', this._listeners.keydown);
@@ -39056,7 +39058,6 @@ var Cropper = function (_Component) {
           y = pointer.y;
 
       var cropzone = this._cropzone;
-
       if (Math.abs(x - this._startX) + Math.abs(y - this._startY) > MOUSE_MOVE_THRESHOLD) {
         canvas.remove(cropzone);
         cropzone.set(this._calcRectDimensionFromPoint(x, y));
@@ -39229,8 +39230,17 @@ var Cropper = function (_Component) {
       var canvas = this.getCanvas();
       var originalWidth = canvas.getWidth();
       var originalHeight = canvas.getHeight();
+      var _canvas$backgroundIma = canvas.backgroundImage,
+          bgImgHeight = _canvas$backgroundIma.height,
+          bgImgWidth = _canvas$backgroundIma.width,
+          scaleX = _canvas$backgroundIma.scaleX,
+          scaleY = _canvas$backgroundIma.scaleY;
 
-      var standardSize = originalWidth >= originalHeight ? originalWidth : originalHeight;
+      var canvasBgImgWidth = bgImgWidth * scaleX;
+      var canvasBgImgHeight = bgImgHeight * scaleY;
+      // 撑满的那一个值
+      var standardSize = Math.max(canvasBgImgWidth, canvasBgImgHeight);
+      // <=1
       var getScale = function getScale(value, orignalValue) {
         return value > orignalValue ? orignalValue / value : 1;
       };
@@ -39238,7 +39248,7 @@ var Cropper = function (_Component) {
       var width = standardSize * (free || presetRatio);
       var height = standardSize;
 
-      var scaleWidth = getScale(width, originalWidth);
+      var scaleWidth = getScale(width, canvasBgImgWidth);
 
       var _snippet$map = _tuiCodeSnippet2.default.map([width, height], function (sizeValue) {
         return sizeValue * scaleWidth;
@@ -39248,7 +39258,7 @@ var Cropper = function (_Component) {
       height = _snippet$map[1];
 
 
-      var scaleHeight = getScale(height, originalHeight);
+      var scaleHeight = getScale(height, canvasBgImgHeight);
 
       var _snippet$map2 = _tuiCodeSnippet2.default.map([width, height], function (sizeValue) {
         return (0, _util.fixFloatingPoint)(sizeValue * scaleHeight);
@@ -40356,11 +40366,9 @@ var ImageLoader = function (_Component) {
       var _this2 = this;
 
       var promise = void 0;
-
       if (!imageName && !img) {
         // Back to the initial state, not error.
         var canvas = this.getCanvas();
-
         canvas.backgroundImage = null;
         canvas.renderAll();
 
@@ -40371,7 +40379,7 @@ var ImageLoader = function (_Component) {
       } else {
         promise = this._setBackgroundImage(img).then(function (oImage) {
           _this2.setCanvasImage(imageName, oImage);
-          _this2.adjustCanvasDimension();
+          _this2.adjustCanvasDimension(oImage);
 
           return oImage;
         });
@@ -40398,16 +40406,25 @@ var ImageLoader = function (_Component) {
 
       return new _util.Promise(function (resolve, reject) {
         var canvas = _this3.getCanvas();
-
-        canvas.setBackgroundImage(img, function () {
-          var oImage = canvas.backgroundImage;
-
-          if (oImage && oImage.getElement()) {
-            resolve(oImage);
-          } else {
-            reject(_consts.rejectMessages.loadingImageFailed);
-          }
-        }, imageOption);
+        canvas.setDimensions({
+          width: _this3.graphics.cssMaxWidth * 2,
+          height: _this3.graphics.cssMaxHeight * 2
+        });
+        fabric.Image.fromURL(img, function (_img, isError) {
+          var scale = Math.min(canvas.width / _img.width, canvas.height / _img.height);
+          _img.set({
+            scaleX: scale,
+            scaleY: scale
+          });
+          canvas.setBackgroundImage(_img, function () {
+            var oImage = canvas.backgroundImage;
+            if (oImage && oImage.getElement()) {
+              resolve(oImage);
+            } else {
+              reject(_consts.rejectMessages.loadingImageFailed);
+            }
+          });
+        });
       });
     }
   }]);
@@ -45105,13 +45122,14 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         width = this.width,
         left = this.left,
         top = this.top;
+    var _canvas$backgroundIma = this.canvas.backgroundImage,
+        minLeft = _canvas$backgroundIma.left,
+        minTop = _canvas$backgroundIma.top;
 
-    var maxLeft = this.canvas.getWidth() - width;
-    var maxTop = this.canvas.getHeight() - height;
-
-    this.left = (0, _util.clamp)(left, 0, maxLeft);
-    this.top = (0, _util.clamp)(top, 0, maxTop);
-
+    var maxLeft = this.canvas.getWidth() - width - minLeft;
+    var maxTop = this.canvas.getHeight() - height - minTop;
+    this.left = (0, _util.clamp)(left, minLeft, maxLeft);
+    this.top = (0, _util.clamp)(top, minTop, maxTop);
     this.canvasEventTrigger[_consts.eventNames.OBJECT_MOVED](this);
   },
 
@@ -45125,7 +45143,6 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
     var selectedCorner = fEvent.transform.corner;
     var pointer = this.canvas.getPointer(fEvent.e);
     var settings = this._calcScalingSizeFromPointer(pointer, selectedCorner);
-
     // On scaling cropzone,
     // change real width and height and fix scaleFactor to 1
     this.scale(1).set(settings);
@@ -45212,6 +45229,20 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
     };
   },
 
+  /**
+   * get dimension backgroundImg
+   * 返回顶点坐标
+   */
+  _getBackgroundImgInfo: function _getBackgroundImgInfo() {
+    var backgroundImage = this.canvas.backgroundImage;
+
+    return {
+      top: backgroundImage.top,
+      left: backgroundImage.left,
+      right: backgroundImage.left + backgroundImage.width * backgroundImage.scaleX,
+      bottom: backgroundImage.top + backgroundImage.height * backgroundImage.scaleY
+    };
+  },
 
   /**
    * Get dimension last state cropzone
@@ -45263,6 +45294,12 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         canvasWidth = _getCropzoneRectInfo2.canvasWidth,
         canvasHeight = _getCropzoneRectInfo2.canvasHeight;
 
+    var _getBackgroundImgInfo2 = this._getBackgroundImgInfo(),
+        bgTop = _getBackgroundImgInfo2.top,
+        bgLeft = _getBackgroundImgInfo2.left,
+        bgRight = _getBackgroundImgInfo2.right,
+        bgBottom = _getBackgroundImgInfo2.bottom;
+
     var resizeInfoMap = {
       tl: {
         width: rectRight - x,
@@ -45273,8 +45310,8 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         topMaker: function topMaker(newHeight) {
           return rectBottom - newHeight;
         },
-        maxWidth: rectRight,
-        maxHeight: rectBottom,
+        maxWidth: rectRight - bgLeft,
+        maxHeight: rectBottom - bgTop,
         scaleTo: getScaleBasis(rectLeft - x, rectTop - y)
       },
       tr: {
@@ -45286,8 +45323,8 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         topMaker: function topMaker(newHeight) {
           return rectBottom - newHeight;
         },
-        maxWidth: canvasWidth - rectLeft,
-        maxHeight: rectBottom,
+        maxWidth: bgRight - rectLeft,
+        maxHeight: rectBottom - bgTop,
         scaleTo: getScaleBasis(x - rectRight, rectTop - y)
       },
       mt: {
@@ -45300,7 +45337,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
           return rectBottom - newHeight;
         },
         maxWidth: canvasWidth - rectLeft,
-        maxHeight: rectBottom,
+        maxHeight: rectBottom - bgTop,
         scaleTo: 'height'
       },
       ml: {
@@ -45312,7 +45349,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         topMaker: function topMaker() {
           return rectTop;
         },
-        maxWidth: rectRight,
+        maxWidth: rectRight - bgLeft,
         maxHeight: canvasHeight - rectTop,
         scaleTo: 'width'
       },
@@ -45325,7 +45362,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         topMaker: function topMaker() {
           return rectTop;
         },
-        maxWidth: canvasWidth - rectLeft,
+        maxWidth: bgRight - rectLeft,
         maxHeight: canvasHeight - rectTop,
         scaleTo: 'width'
       },
@@ -45339,7 +45376,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
           return rectTop;
         },
         maxWidth: canvasWidth - rectLeft,
-        maxHeight: canvasHeight - rectTop,
+        maxHeight: bgBottom - rectTop,
         scaleTo: 'height'
       },
       bl: {
@@ -45351,8 +45388,8 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         topMaker: function topMaker() {
           return rectTop;
         },
-        maxWidth: rectRight,
-        maxHeight: canvasHeight - rectTop,
+        maxWidth: rectRight - bgLeft,
+        maxHeight: bgBottom - rectTop,
         scaleTo: getScaleBasis(rectLeft - x, y - rectBottom)
       },
       br: {
@@ -45364,8 +45401,8 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         topMaker: function topMaker() {
           return rectTop;
         },
-        maxWidth: canvasWidth - rectLeft,
-        maxHeight: canvasHeight - rectTop,
+        maxWidth: bgRight - rectLeft,
+        maxHeight: bgBottom - rectTop,
         scaleTo: getScaleBasis(x - rectRight, y - rectBottom)
       }
     };
@@ -46536,13 +46573,14 @@ var Graphics = function () {
 
   }, {
     key: 'adjustCanvasDimension',
-    value: function adjustCanvasDimension() {
-      this.adjustCanvasDimensionBase(this.canvasImage.scale(1));
+    value: function adjustCanvasDimension(oImage) {
+      this.adjustCanvasDimensionBase(this.canvasImage, oImage);
     }
   }, {
     key: 'adjustCanvasDimensionBase',
     value: function adjustCanvasDimensionBase() {
       var canvasImage = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+      var oImage = arguments[1];
 
       if (!canvasImage) {
         canvasImage = this.canvasImage;
@@ -46552,19 +46590,20 @@ var Graphics = function () {
           width = _canvasImage$getBound.width,
           height = _canvasImage$getBound.height;
 
-      var maxDimension = this._calcMaxDimension(width, height);
+      // const maxDimension = this._calcMaxDimension(width, height);
+
 
       this.setCanvasCssDimension({
-        width: '100%',
-        height: '100%', // Set height '' for IE9
-        'max-width': maxDimension.width + 'px',
-        'max-height': maxDimension.height + 'px'
+        width: this.cssMaxWidth + 'px',
+        height: this.cssMaxHeight + 'px' // Set height '' for IE9
+        // 'max-width': `${maxDimension.width}px`,
+        // 'max-height': `${maxDimension.height}px`,
       });
 
-      this.setCanvasBackstoreDimension({
-        width: width,
-        height: height
-      });
+      // this.setCanvasBackstoreDimension({
+      //   width,
+      //   height,
+      // });
       this._canvas.centerObject(canvasImage);
     }
 
@@ -50130,10 +50169,12 @@ var ImageEditor = function () {
   function ImageEditor(wrapper, options) {
     _classCallCheck(this, ImageEditor);
 
+    // options cssWidth, cssHeight
     options = _tuiCodeSnippet2.default.extend({
       includeUI: false,
       usageStatistics: true
     }, options);
+    this.options = options;
 
     this.mode = null;
 
@@ -55282,7 +55323,6 @@ var Filter = function (_Submenu) {
           checkboxGroup.classList.add('tui-image-editor-disabled');
         }
       }
-      console.log(applyFilter, apply, type, this._getFilterOption(filterName));
       applyFilter(apply, type, this._getFilterOption(filterName), !isLast);
     }
 

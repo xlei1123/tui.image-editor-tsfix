@@ -39,6 +39,8 @@ const command = {
       oldHeight: prevImageHeight,
       newWidth: newImage.width,
       newHeight: newImage.height,
+      scaleX: newImage.scaleX,
+      scaleY: newImage.scaleY
     }));
   },
 

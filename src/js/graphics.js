@@ -576,29 +576,29 @@ class Graphics {
   /**
    * Adjust canvas dimension with scaling image
    */
-  adjustCanvasDimension() {
-    this.adjustCanvasDimensionBase(this.canvasImage.scale(1));
+  adjustCanvasDimension(oImage) {
+    this.adjustCanvasDimensionBase(this.canvasImage, oImage);
   }
 
-  adjustCanvasDimensionBase(canvasImage = null) {
+  adjustCanvasDimensionBase(canvasImage = null, oImage) {
     if (!canvasImage) {
       canvasImage = this.canvasImage;
     }
 
     const { width, height } = canvasImage.getBoundingRect();
-    const maxDimension = this._calcMaxDimension(width, height);
 
+    // const maxDimension = this._calcMaxDimension(width, height);
     this.setCanvasCssDimension({
-      width: '100%',
-      height: '100%', // Set height '' for IE9
-      'max-width': `${maxDimension.width}px`,
-      'max-height': `${maxDimension.height}px`,
+      width: `${this.cssMaxWidth}px`,
+      height: `${this.cssMaxHeight}px`, // Set height '' for IE9
+      // 'max-width': `${maxDimension.width}px`,
+      // 'max-height': `${maxDimension.height}px`,
     });
 
-    this.setCanvasBackstoreDimension({
-      width,
-      height,
-    });
+    // this.setCanvasBackstoreDimension({
+    //   width,
+    //   height,
+    // });
     this._canvas.centerObject(canvasImage);
   }
 

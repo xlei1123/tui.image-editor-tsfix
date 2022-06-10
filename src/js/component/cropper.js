@@ -106,7 +106,7 @@ class Cropper extends Component {
     canvas.discardActiveObject();
     canvas.add(this._cropzone);
     // @layxiang 去掉鼠标拖动自由裁剪
-    // canvas.on('mouse:down', this._listeners.mousedown);
+    canvas.on('mouse:down', this._listeners.mousedown);
     canvas.selection = false;
     // canvas.defaultCursor = 'crosshair';
     fabric.util.addListener(document, 'keydown', this._listeners.keydown);
@@ -180,7 +180,6 @@ class Cropper extends Component {
     const pointer = canvas.getPointer(fEvent.e);
     const { x, y } = pointer;
     const cropzone = this._cropzone;
-
     if (Math.abs(x - this._startX) + Math.abs(y - this._startY) > MOUSE_MOVE_THRESHOLD) {
       canvas.remove(cropzone);
       cropzone.set(this._calcRectDimensionFromPoint(x, y));
@@ -335,17 +334,21 @@ class Cropper extends Component {
     const canvas = this.getCanvas();
     const originalWidth = canvas.getWidth();
     const originalHeight = canvas.getHeight();
-
-    const standardSize = originalWidth >= originalHeight ? originalWidth : originalHeight;
+    const { height: bgImgHeight, width: bgImgWidth, scaleX, scaleY } = canvas.backgroundImage;
+    const canvasBgImgWidth = bgImgWidth * scaleX;
+    const canvasBgImgHeight = bgImgHeight * scaleY;
+    // 撑满的那一个值
+    const standardSize = Math.max(canvasBgImgWidth, canvasBgImgHeight);
+    // <=1
     const getScale = (value, orignalValue) => (value > orignalValue ? orignalValue / value : 1);
     // @layxiang 自由裁剪
     let width = standardSize * (free || presetRatio);
     let height = standardSize;
 
-    const scaleWidth = getScale(width, originalWidth);
+    const scaleWidth = getScale(width, canvasBgImgWidth);
     [width, height] = snippet.map([width, height], (sizeValue) => sizeValue * scaleWidth);
 
-    const scaleHeight = getScale(height, originalHeight);
+    const scaleHeight = getScale(height, canvasBgImgHeight);
     [width, height] = snippet.map([width, height], (sizeValue) =>
       fixFloatingPoint(sizeValue * scaleHeight)
     );

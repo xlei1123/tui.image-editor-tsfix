@@ -330,12 +330,11 @@ const Cropzone = fabric.util.createClass(
      */
     _onMoving() {
       const { height, width, left, top } = this;
-      const maxLeft = this.canvas.getWidth() - width;
-      const maxTop = this.canvas.getHeight() - height;
-
-      this.left = clamp(left, 0, maxLeft);
-      this.top = clamp(top, 0, maxTop);
-
+      const { left: minLeft, top: minTop } = this.canvas.backgroundImage;
+      const maxLeft = this.canvas.getWidth() - width - minLeft;
+      const maxTop = this.canvas.getHeight() - height - minTop;
+      this.left = clamp(left, minLeft, maxLeft);
+      this.top = clamp(top, minTop, maxTop);
       this.canvasEventTrigger[events.OBJECT_MOVED](this);
     },
 
@@ -348,7 +347,6 @@ const Cropzone = fabric.util.createClass(
       const selectedCorner = fEvent.transform.corner;
       const pointer = this.canvas.getPointer(fEvent.e);
       const settings = this._calcScalingSizeFromPointer(pointer, selectedCorner);
-
       // On scaling cropzone,
       // change real width and height and fix scaleFactor to 1
       this.scale(1).set(settings);
@@ -419,7 +417,19 @@ const Cropzone = fabric.util.createClass(
         top: topMaker(height),
       };
     },
-
+    /**
+     * get dimension backgroundImg
+     * 返回顶点坐标
+     */
+    _getBackgroundImgInfo() {
+      const { backgroundImage } = this.canvas;
+      return {
+        top: backgroundImage.top,
+        left: backgroundImage.left,
+        right: backgroundImage.left + backgroundImage.width*backgroundImage.scaleX,
+        bottom: backgroundImage.top + backgroundImage.height*backgroundImage.scaleY,
+      }
+    },
     /**
      * Get dimension last state cropzone
      * @returns {{rectTop: number, rectLeft: number, rectWidth: number, rectHeight: number}}
@@ -433,7 +443,6 @@ const Cropzone = fabric.util.createClass(
         width: rectWidth,
         height: rectHeight,
       } = this.getBoundingRect(false, true);
-
       return {
         rectTop,
         rectLeft,
@@ -464,15 +473,15 @@ const Cropzone = fabric.util.createClass(
         canvasWidth,
         canvasHeight,
       } = this._getCropzoneRectInfo();
-
+      const { top: bgTop, left: bgLeft, right: bgRight, bottom: bgBottom } = this._getBackgroundImgInfo();
       const resizeInfoMap = {
         tl: {
           width: rectRight - x,
           height: rectBottom - y,
           leftMaker: (newWidth) => rectRight - newWidth,
           topMaker: (newHeight) => rectBottom - newHeight,
-          maxWidth: rectRight,
-          maxHeight: rectBottom,
+          maxWidth: rectRight - bgLeft,
+          maxHeight: rectBottom - bgTop,
           scaleTo: getScaleBasis(rectLeft - x, rectTop - y),
         },
         tr: {
@@ -480,8 +489,8 @@ const Cropzone = fabric.util.createClass(
           height: rectBottom - y,
           leftMaker: () => rectLeft,
           topMaker: (newHeight) => rectBottom - newHeight,
-          maxWidth: canvasWidth - rectLeft,
-          maxHeight: rectBottom,
+          maxWidth: bgRight - rectLeft,
+          maxHeight: rectBottom - bgTop,
           scaleTo: getScaleBasis(x - rectRight, rectTop - y),
         },
         mt: {
@@ -490,7 +499,7 @@ const Cropzone = fabric.util.createClass(
           leftMaker: () => rectLeft,
           topMaker: (newHeight) => rectBottom - newHeight,
           maxWidth: canvasWidth - rectLeft,
-          maxHeight: rectBottom,
+          maxHeight: rectBottom - bgTop,
           scaleTo: 'height',
         },
         ml: {
@@ -498,7 +507,7 @@ const Cropzone = fabric.util.createClass(
           height: rectHeight,
           leftMaker: (newWidth) => rectRight - newWidth,
           topMaker: () => rectTop,
-          maxWidth: rectRight,
+          maxWidth: rectRight - bgLeft,
           maxHeight: canvasHeight - rectTop,
           scaleTo: 'width',
         },
@@ -507,7 +516,7 @@ const Cropzone = fabric.util.createClass(
           height: rectHeight,
           leftMaker: () => rectLeft,
           topMaker: () => rectTop,
-          maxWidth: canvasWidth - rectLeft,
+          maxWidth: bgRight - rectLeft,
           maxHeight: canvasHeight - rectTop,
           scaleTo: 'width',
         },
@@ -517,7 +526,7 @@ const Cropzone = fabric.util.createClass(
           leftMaker: () => rectLeft,
           topMaker: () => rectTop,
           maxWidth: canvasWidth - rectLeft,
-          maxHeight: canvasHeight - rectTop,
+          maxHeight: bgBottom - rectTop,
           scaleTo: 'height',
         },
         bl: {
@@ -525,8 +534,8 @@ const Cropzone = fabric.util.createClass(
           height: y - rectTop,
           leftMaker: (newWidth) => rectRight - newWidth,
           topMaker: () => rectTop,
-          maxWidth: rectRight,
-          maxHeight: canvasHeight - rectTop,
+          maxWidth: rectRight - bgLeft,
+          maxHeight: bgBottom - rectTop,
           scaleTo: getScaleBasis(rectLeft - x, y - rectBottom),
         },
         br: {
@@ -534,8 +543,8 @@ const Cropzone = fabric.util.createClass(
           height: y - rectTop,
           leftMaker: () => rectLeft,
           topMaker: () => rectTop,
-          maxWidth: canvasWidth - rectLeft,
-          maxHeight: canvasHeight - rectTop,
+          maxWidth: bgRight - rectLeft,
+          maxHeight: bgBottom - rectTop,
           scaleTo: getScaleBasis(x - rectRight, y - rectBottom),
         },
       };

@@ -162,7 +162,7 @@ const {
  * });
  */
 class ImageEditor {
-  constructor(wrapper, options) {
+  constructor(wrapper, options) {  // options cssWidth, cssHeight
     options = snippet.extend(
       {
         includeUI: false,
@@ -170,6 +170,7 @@ class ImageEditor {
       },
       options
     );
+    this.options = options;
 
     this.mode = null;
 

@@ -31,11 +31,9 @@ class ImageLoader extends Component {
    */
   load(imageName, img) {
     let promise;
-
     if (!imageName && !img) {
       // Back to the initial state, not error.
       const canvas = this.getCanvas();
-
       canvas.backgroundImage = null;
       canvas.renderAll();
 
@@ -46,7 +44,7 @@ class ImageLoader extends Component {
     } else {
       promise = this._setBackgroundImage(img).then((oImage) => {
         this.setCanvasImage(imageName, oImage);
-        this.adjustCanvasDimension();
+        this.adjustCanvasDimension(oImage);
 
         return oImage;
       });
@@ -68,20 +66,28 @@ class ImageLoader extends Component {
 
     return new Promise((resolve, reject) => {
       const canvas = this.getCanvas();
-
-      canvas.setBackgroundImage(
-        img,
-        () => {
-          const oImage = canvas.backgroundImage;
-
-          if (oImage && oImage.getElement()) {
-            resolve(oImage);
-          } else {
-            reject(rejectMessages.loadingImageFailed);
-          }
-        },
-        imageOption
-      );
+      canvas.setDimensions({
+        width: this.graphics.cssMaxWidth * 2,
+        height: this.graphics.cssMaxHeight * 2,
+      });
+      fabric.Image.fromURL(img, (_img, isError) => {
+        const scale = Math.min(canvas.width / _img.width, canvas.height / _img.height);
+        _img.set({
+          scaleX: scale,
+          scaleY: scale,
+        });
+        canvas.setBackgroundImage(
+          _img,
+          () => {
+            const oImage = canvas.backgroundImage;
+            if (oImage && oImage.getElement()) {
+              resolve(oImage);
+            } else {
+              reject(rejectMessages.loadingImageFailed);
+            }
+          });
+      })
+      
     });
   }
 }

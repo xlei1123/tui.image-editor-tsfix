@@ -100,8 +100,8 @@ var $selectBlendType = $('[name="select-blend-type"]');
 
 // Image editor
 var imageEditor = new tui.ImageEditor('.tui-image-editor', {
-  cssMaxWidth: 700,
-  cssMaxHeight: 500,
+  cssMaxWidth: 510,
+  cssMaxHeight: 350,
   selectionStyle: {
     cornerSize: 20,
     rotatingPointOffset: 70,
@@ -916,8 +916,10 @@ $inputRangeColorFilterValue.on('change', function () {
 // Etc..
 
 // Load sample image
-imageEditor.loadImageFromURL('img/sampleImage.jpg', 'SampleImage').then(function (sizeValue) {
-  console.log(sizeValue);
+// small.png
+// sampleImage.jpg
+// image1.jpeg
+imageEditor.loadImageFromURL('img/image1.jpeg', 'SampleImage').then(function (sizeValue) {
   imageEditor.clearUndoStack();
 });
 
