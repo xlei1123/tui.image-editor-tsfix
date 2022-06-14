@@ -71,7 +71,7 @@ class ImageLoader extends Component {
         height: this.graphics.cssMaxHeight * 2,
       });
       fabric.Image.fromURL(img, (_img, isError) => {
-        const scale = Math.min(canvas.width / _img.width, canvas.height / _img.height);
+        const scale = Math.min(canvas.width / _img.width, canvas.height / _img.height, 2);
         _img.set({
           scaleX: scale,
           scaleY: scale,

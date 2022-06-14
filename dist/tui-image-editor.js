@@ -40413,7 +40413,7 @@ var ImageLoader = function (_Component) {
           height: _this3.graphics.cssMaxHeight * 2
         });
         fabric.Image.fromURL(img, function (_img, isError) {
-          var scale = Math.min(canvas.width / _img.width, canvas.height / _img.height);
+          var scale = Math.min(canvas.width / _img.width, canvas.height / _img.height, 2);
           _img.set({
             scaleX: scale,
             scaleY: scale

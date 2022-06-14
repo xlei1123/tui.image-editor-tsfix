@@ -919,7 +919,8 @@ $inputRangeColorFilterValue.on('change', function () {
 // small.png
 // sampleImage.jpg
 // image1.jpeg
-imageEditor.loadImageFromURL('img/image1.jpeg', 'SampleImage').then(function (sizeValue) {
+// template.png
+imageEditor.loadImageFromURL('img/dog.jpeg', 'SampleImage').then(function (sizeValue) {
   imageEditor.clearUndoStack();
 });
 
