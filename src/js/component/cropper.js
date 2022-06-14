@@ -69,6 +69,7 @@ class Cropper extends Component {
       mousemove: this._onFabricMouseMove.bind(this),
       mouseup: this._onFabricMouseUp.bind(this),
     };
+    this.initCropControl = graphics.initCropControl;
   }
 
   /**
@@ -102,11 +103,12 @@ class Cropper extends Component {
         this.graphics.cropSelectionStyle
       )
     );
-
+    if (this.initCropControl) this._cropzone.controls = this.initCropControl;
+    console.log('this._cropzone.controls====>', this._cropzone.controls);
     canvas.discardActiveObject();
     canvas.add(this._cropzone);
     // @layxiang 去掉鼠标拖动自由裁剪
-    // canvas.on('mouse:down', this._listeners.mousedown);
+    canvas.on('mouse:down', this._listeners.mousedown);
     canvas.selection = false;
     // canvas.defaultCursor = 'crosshair';
     fabric.util.addListener(document, 'keydown', this._listeners.keydown);

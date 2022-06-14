@@ -60,7 +60,7 @@ const backstoreOnly = {
  * @ignore
  */
 class Graphics {
-  constructor(element, { cssMaxWidth, cssMaxHeight } = {}) {
+  constructor(element, { cssMaxWidth, cssMaxHeight, initFabricControl, initCropControl } = {}) {
     /**
      * Fabric image instance
      * @type {fabric.Image}
@@ -152,6 +152,8 @@ class Graphics {
       onSelectionCreated: this._onSelectionCreated.bind(this),
     };
 
+    if (typeof initFabricControl === 'function') initFabricControl(this.ctx, fabric);
+    if (typeof initCropControl ==='function') this.initCropControl = initCropControl(this.ctx, fabric);
     this._setObjectCachingToFalse();
     this._setCanvasElement(element);
     this._createDrawingModeInstances();
@@ -172,6 +174,153 @@ class Graphics {
 
     this._detachZoomEvents();
   }
+
+  /**
+   * fabric controls
+   */
+  // _initFabricControl() {
+  //   if (typeof initFabricControl === 'function') initFabricControl(ctx, fabric);
+  //   const deleteImgIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAOjSURBVHgB1Zq/UttAEMa/O8txqOI3iNMnE6fPTJxJRxrnCQxdOqACp0E0IXTwBJgnCFW6TEyRGpg8AM4ThFSEsdBl92zZlq1/d5aN+DUgWZK/1e3d3u5aIA9cVUWl3wRkHVI9hRJ1CDqnUB1fJHqA6tFnl4B/AZS7aPO5+RCwhUWveBskskFHDdigQIaoo3mMMTcgEA5sht/wvIgOVGnP1BAzAw76u8hd+BQCLrbLe9kvz8L+TQ1wTunql1gKNAqq9DbLaMi0C3DgtSCd8+WJZ1QN0jvHZ6+ZdmWyAewySnUW6jJx8HdK9XXotrHEu5AWT/5YBBLmRbQBPHRsfZEQYg3bzsnM6ZkLecKyz9+H2yQhcA3feTU9sWfngCj/KJx4RmvyZrwibICeMLQCFBWBOvb7bvhUALuOcK5QdNiVbpxncMU1H06MQMnFQ4BdqeJtBocDA/TbFy0Y0Hou8WfTwdVHB60X6fEw1/slNvSeDKMRKDVgiPtaoloBak+Azqo0EsHiO+/H9x++MzRgYhSGd4oNGFJ9HD7OakQgfpLrfzBH4A3/kQP3odltyNZ3f+ZcmhFR4pm9nz4saLAbSRv3YTq/fKx/y25EnHh+Bj/LispdU+o00JKsRixE/IC6Q7nrXNvkQMDxalhgJzhWWJR4mgd3NYEv3lUe0XeN3vi0EXHkIl4jejKvrUOcO02Tn3hC6EmcH2lG5CqeoXiQqwH6mSrhM+SP1JujnIhbbQJMI3YWJFXKcjEgTXxAvkbwJFbqEnOStM6bBDsLes6wZglbsgapuDhxMs+kVriUg0KrHVnFm247suNfSNyWT2GB6fZgMUaUu3KYmnVhCOcD06St83FGGOcDjKDKdltHYrAvncGQ6Xwga5CKMsIqH/C5LB8kNLfOoWk84Hyg95e+/NY8wgZGBPfb5QPUU0CoKkHlCoFdPAiol7DjrPN/Y+ezGIV7gxshQ8YG8GT2cYSioxDq4kTURvvnNjnyciDhO1TUmiBi/fI+FNKVWBN3baaYNaC90qMlagtF406sR7WcoiNI+1FH+1pRYC2fnMgdQ3KTrwhLq560ZTfu4/QuJXdrSup46T0D3dAgV2ZvSLwsC7p6R42PZfUOaJtMbd1mljarWaN70S6l3zrFogSXmb3FFN30pl6CYTk+RcVAOO8GXLMU1/7HHgNDGrqybR34RJdS2jMb4aMnIA9GxlCdddDRr4Xmiw5CJJD38D5+6yyQEyl3/oLCf3vTpFGrkv/0AAAAAElFTkSuQmCC';
+  //   const deleteImg = document.createElement('img');
+  //   deleteImg.src = deleteImgIcon;
+  //   const cloneImg = document.createElement('img');
+  //   cloneImg.src = deleteImgIcon;
+  //   function renderDelIcon(ctx, left, top, styleOverride, fabricObject) {
+  //     var size = 24;
+  //     ctx.save();
+  //     ctx.translate(left, top);
+  //     ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
+  //     ctx.drawImage(deleteImg, -size / 2, -size / 2, size, size);
+  //     ctx.restore();
+  //   }
+
+  //   function renderCopyIcon(ctx, left, top, styleOverride, fabricObject) {
+  //     var size = 24;
+  //     ctx.save();
+  //     ctx.translate(left, top);
+  //     ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
+  //     ctx.drawImage(cloneImg, -size / 2, -size / 2, size, size);
+  //     ctx.restore();
+  //   }
+  //   function deleteObject(target) {
+  //     const canvas = target.canvas;
+  //     canvas.remove(target);
+  //     canvas.requestRenderAll();
+  //   }
+  //   function cloneFabricObject(target) {
+  //     var canvas = target.canvas;
+  //     target.clone(function (cloned) {
+  //       cloned.left += 10;
+  //       cloned.top += 10;
+  //       canvas.add(cloned);
+  //     });
+  //   }
+  //   // 设置删除角标
+  //   fabric.Object.prototype.controls.tl = new fabric.Control({
+  //     x: -0.5,
+  //     y: -0.5,
+  //     cursorStyle: 'pointer',
+  //     mouseUpHandler: (eventData, fabricObject) => deleteObject(fabricObject.target),
+  //     render: renderDelIcon,
+  //     cornerSize: 24
+  //   });
+
+  //   // // 设置复制角标
+  //   fabric.Object.prototype.controls.bl = new fabric.Control({
+  //     x: -0.5,
+  //     y: 0.5,
+  //     cursorStyle: 'pointer',
+  //     mouseUpHandler: (eventData, fabricObject) => cloneFabricObject(fabricObject.target),
+  //     render: renderCopyIcon,
+  //     cornerSize: 24
+  //   });
+  //   // 设置旋转角标
+  //   fabric.Object.prototype.controls.tr = new fabric.Control({
+  //     x: 0.5,
+  //     y: -0.5,
+  //     cursorStyle: 'pointer',
+  //     actionHandler: fabric.controlsUtils.rotationWithSnapping,
+  //     cursorStyleHandler: fabric.controlsUtils.rotationStyleHandler,
+  //     render: renderCopyIcon,
+  //     cornerSize: 24
+  //   });
+  //   // 设置伸缩角标
+  //   fabric.Object.prototype.controls.br = new fabric.Control({
+  //     x: 0.5,
+  //     y: 0.5,
+  //     cursorStyle: 'se-resize',
+  //     actionHandler: fabric.controlsUtils.scalingEqually,
+  //     cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
+  //     render: renderCopyIcon,
+  //     cornerSize: 24
+  //   });
+
+  //   fabric.Object.prototype.setControlsVisibility({
+  //     bl: true, // 左下
+  //     br: true, // 右下
+  //     mb: false, // 下中
+  //     ml: false, // 中左
+  //     mr: false, // 中右
+  //     mt: false, // 上中
+  //     tl: true, // 上左
+  //     tr: true, // 上右
+  //     mtr: false // 旋转控制键
+  //   });
+  // }
+  /**
+   * 设置裁剪的控制器样式 示例
+   */
+  // setCropControl() {
+  //   const deleteImgIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAOjSURBVHgB1Zq/UttAEMa/O8txqOI3iNMnE6fPTJxJRxrnCQxdOqACp0E0IXTwBJgnCFW6TEyRGpg8AM4ThFSEsdBl92zZlq1/d5aN+DUgWZK/1e3d3u5aIA9cVUWl3wRkHVI9hRJ1CDqnUB1fJHqA6tFnl4B/AZS7aPO5+RCwhUWveBskskFHDdigQIaoo3mMMTcgEA5sht/wvIgOVGnP1BAzAw76u8hd+BQCLrbLe9kvz8L+TQ1wTunql1gKNAqq9DbLaMi0C3DgtSCd8+WJZ1QN0jvHZ6+ZdmWyAewySnUW6jJx8HdK9XXotrHEu5AWT/5YBBLmRbQBPHRsfZEQYg3bzsnM6ZkLecKyz9+H2yQhcA3feTU9sWfngCj/KJx4RmvyZrwibICeMLQCFBWBOvb7bvhUALuOcK5QdNiVbpxncMU1H06MQMnFQ4BdqeJtBocDA/TbFy0Y0Hou8WfTwdVHB60X6fEw1/slNvSeDKMRKDVgiPtaoloBak+Azqo0EsHiO+/H9x++MzRgYhSGd4oNGFJ9HD7OakQgfpLrfzBH4A3/kQP3odltyNZ3f+ZcmhFR4pm9nz4saLAbSRv3YTq/fKx/y25EnHh+Bj/LispdU+o00JKsRixE/IC6Q7nrXNvkQMDxalhgJzhWWJR4mgd3NYEv3lUe0XeN3vi0EXHkIl4jejKvrUOcO02Tn3hC6EmcH2lG5CqeoXiQqwH6mSrhM+SP1JujnIhbbQJMI3YWJFXKcjEgTXxAvkbwJFbqEnOStM6bBDsLes6wZglbsgapuDhxMs+kVriUg0KrHVnFm247suNfSNyWT2GB6fZgMUaUu3KYmnVhCOcD06St83FGGOcDjKDKdltHYrAvncGQ6Xwga5CKMsIqH/C5LB8kNLfOoWk84Hyg95e+/NY8wgZGBPfb5QPUU0CoKkHlCoFdPAiol7DjrPN/Y+ezGIV7gxshQ8YG8GT2cYSioxDq4kTURvvnNjnyciDhO1TUmiBi/fI+FNKVWBN3baaYNaC90qMlagtF406sR7WcoiNI+1FH+1pRYC2fnMgdQ3KTrwhLq560ZTfu4/QuJXdrSup46T0D3dAgV2ZvSLwsC7p6R42PZfUOaJtMbd1mljarWaN70S6l3zrFogSXmb3FFN30pl6CYTk+RcVAOO8GXLMU1/7HHgNDGrqybR34RJdS2jMb4aMnIA9GxlCdddDRr4Xmiw5CJJD38D5+6yyQEyl3/oLCf3vTpFGrkv/0AAAAAElFTkSuQmCC';
+  //   const cloneImg = document.createElement('img');
+  //   cloneImg.src = deleteImgIcon;
+  //   function renderCopyIcon(ctx, left, top, styleOverride, fabricObject) {
+  //     var size = 24;
+  //     ctx.save();
+  //     ctx.translate(left, top);
+  //     ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
+  //     ctx.drawImage(cloneImg, -size / 2, -size / 2, size, size);
+  //     ctx.restore();
+  //   }
+  //   return {
+  //     tl: new fabric.Control({
+  //       x: -0.5,
+  //       y: -0.5,
+  //       cursorStyle: 'nw-resize',
+  //       actionHandler: fabric.controlsUtils.scalingEqually,
+  //       cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
+  //       render: renderCopyIcon,
+  //       cornerSize: 24
+  //     }),
+  //     tr: new fabric.Control({
+  //       x: 0.5,
+  //       y: -0.5,
+  //       cursorStyle: 'ne-resize',
+  //       actionHandler: fabric.controlsUtils.scalingEqually,
+  //       cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
+  //       render: renderCopyIcon,
+  //       cornerSize: 24
+  //     }),
+  //     bl: new fabric.Control({
+  //       x: -0.5,
+  //       y: 0.5,
+  //       cursorStyle: 'sw-resize',
+  //       actionHandler: fabric.controlsUtils.scalingEqually,
+  //       cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
+  //       render: renderCopyIcon,
+  //       cornerSize: 24
+  //     }),
+  //     br: new fabric.Control({
+  //       x: 0.5,
+  //       y: 0.5,
+  //       cursorStyle: 'se-resize',
+  //       actionHandler: fabric.controlsUtils.scalingEqually,
+  //       cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
+  //       render: renderCopyIcon,
+  //       cornerSize: 24
+  //     }),
+  //   }
+  // }
 
   /**
    * Attach zoom events
@@ -1070,7 +1219,7 @@ class Graphics {
    * @param {fabric.Image} obj - Fabric image object
    * @private
    */
-  _callbackAfterLoadingImageObject(obj, scale=1) {
+  _callbackAfterLoadingImageObject(obj, scale = 1) {
     const centerPos = this.getCanvasImage().getCenterPoint();
     obj.set(fObjectOptions.SELECTION_STYLE);
     obj.set({
