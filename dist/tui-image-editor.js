@@ -38968,7 +38968,6 @@ var Cropper = function (_Component) {
         fill: 'transparent'
       }, _consts.CROPZONE_DEFAULT_OPTIONS, this.graphics.cropSelectionStyle));
       if (this.initCropControl) this._cropzone.controls = this.initCropControl;
-      console.log('this._cropzone.controls====>', this._cropzone.controls);
       canvas.discardActiveObject();
       canvas.add(this._cropzone);
       // @layxiang 去掉鼠标拖动自由裁剪
@@ -39155,10 +39154,11 @@ var Cropper = function (_Component) {
       if (containsCropzone) {
         canvas.remove(this._cropzone);
       }
-
       var imageData = {
         imageName: this.getImageName(),
-        url: canvas.toDataURL(cropRect)
+        url: canvas.toDataURL(Object.assign({}, cropRect, {
+          multiplier: 1 / canvas.backgroundImage.scaleX
+        }))
       };
 
       if (containsCropzone) {
@@ -40409,11 +40409,11 @@ var ImageLoader = function (_Component) {
       return new _util.Promise(function (resolve, reject) {
         var canvas = _this3.getCanvas();
         canvas.setDimensions({
-          width: _this3.graphics.cssMaxWidth * 2,
-          height: _this3.graphics.cssMaxHeight * 2
+          width: _this3.graphics.cssMaxWidth,
+          height: _this3.graphics.cssMaxHeight
         });
         fabric.Image.fromURL(img, function (_img, isError) {
-          var scale = Math.min(canvas.width / _img.width, canvas.height / _img.height, 2);
+          var scale = Math.min(canvas.width / _img.width, canvas.height / _img.height, 1);
           _img.set({
             scaleX: scale,
             scaleY: scale
@@ -47223,7 +47223,7 @@ var Graphics = function () {
 
       this._canvas = new _fabric.fabric.Canvas(canvasElement, {
         containerClass: 'tui-image-editor-canvas-container',
-        enableRetinaScaling: false,
+        enableRetinaScaling: true,
         fireRightClick: true
       });
     }

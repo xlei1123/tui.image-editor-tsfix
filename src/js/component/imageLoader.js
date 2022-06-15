@@ -67,11 +67,11 @@ class ImageLoader extends Component {
     return new Promise((resolve, reject) => {
       const canvas = this.getCanvas();
       canvas.setDimensions({
-        width: this.graphics.cssMaxWidth * 2,
-        height: this.graphics.cssMaxHeight * 2,
+        width: this.graphics.cssMaxWidth,
+        height: this.graphics.cssMaxHeight,
       });
       fabric.Image.fromURL(img, (_img, isError) => {
-        const scale = Math.min(canvas.width / _img.width, canvas.height / _img.height, 2);
+        const scale = Math.min(canvas.width / _img.width, canvas.height / _img.height, 1);
         _img.set({
           scaleX: scale,
           scaleY: scale,

@@ -104,7 +104,6 @@ class Cropper extends Component {
       )
     );
     if (this.initCropControl) this._cropzone.controls = this.initCropControl;
-    console.log('this._cropzone.controls====>', this._cropzone.controls);
     canvas.discardActiveObject();
     canvas.add(this._cropzone);
     // @layxiang 去掉鼠标拖动自由裁剪
@@ -268,10 +267,11 @@ class Cropper extends Component {
     if (containsCropzone) {
       canvas.remove(this._cropzone);
     }
-
     const imageData = {
       imageName: this.getImageName(),
-      url: canvas.toDataURL(cropRect),
+      url: canvas.toDataURL(Object.assign({}, cropRect, {
+        multiplier: 1 / canvas.backgroundImage.scaleX
+      })),
     };
 
     if (containsCropzone) {
