@@ -38951,13 +38951,14 @@ var Cropper = function (_Component) {
         return;
       }
       var canvas = this.getCanvas();
+      var canvasImage = this.getCanvasImage();
 
       canvas.forEachObject(function (obj) {
         // {@link http://fabricjs.com/docs/fabric.Object.html#evented}
         obj.evented = false;
       });
 
-      this._cropzone = new _cropzone2.default(canvas, _tuiCodeSnippet2.default.extend({
+      this._cropzone = new _cropzone2.default(canvas, canvasImage, _tuiCodeSnippet2.default.extend({
         left: 0,
         top: 0,
         width: 0.5,
@@ -39230,18 +39231,17 @@ var Cropper = function (_Component) {
         free = 1;
       }
       var canvas = this.getCanvas();
+      var canvasImage = this.getCanvasImage();
       var originalWidth = canvas.getWidth();
       var originalHeight = canvas.getHeight();
-      var _canvas$backgroundIma = canvas.backgroundImage,
-          bgImgHeight = _canvas$backgroundIma.height,
-          bgImgWidth = _canvas$backgroundIma.width,
-          scaleX = _canvas$backgroundIma.scaleX,
-          scaleY = _canvas$backgroundIma.scaleY;
 
-      var canvasBgImgWidth = bgImgWidth * scaleX;
-      var canvasBgImgHeight = bgImgHeight * scaleY;
+      var _canvasImage$getBound = canvasImage.getBoundingRect(),
+          bgImgHeight = _canvasImage$getBound.height,
+          bgImgWidth = _canvasImage$getBound.width;
       // 撑满的那一个值
-      var standardSize = Math.max(canvasBgImgWidth, canvasBgImgHeight);
+
+
+      var standardSize = Math.max(bgImgWidth, bgImgHeight);
       // <=1
       var getScale = function getScale(value, orignalValue) {
         return value > orignalValue ? orignalValue / value : 1;
@@ -39250,7 +39250,7 @@ var Cropper = function (_Component) {
       var width = standardSize * (free || presetRatio);
       var height = standardSize;
 
-      var scaleWidth = getScale(width, canvasBgImgWidth);
+      var scaleWidth = getScale(width, bgImgWidth);
 
       var _snippet$map = _tuiCodeSnippet2.default.map([width, height], function (sizeValue) {
         return sizeValue * scaleWidth;
@@ -39260,7 +39260,7 @@ var Cropper = function (_Component) {
       height = _snippet$map[1];
 
 
-      var scaleHeight = getScale(height, canvasBgImgHeight);
+      var scaleHeight = getScale(height, bgImgHeight);
 
       var _snippet$map2 = _tuiCodeSnippet2.default.map([width, height], function (sizeValue) {
         return (0, _util.fixFloatingPoint)(sizeValue * scaleHeight);
@@ -40413,11 +40413,6 @@ var ImageLoader = function (_Component) {
           height: _this3.graphics.cssMaxHeight
         });
         fabric.Image.fromURL(img, function (_img, isError) {
-          var scale = Math.min(canvas.width / _img.width, canvas.height / _img.height, 1);
-          _img.set({
-            scaleX: scale,
-            scaleY: scale
-          });
           canvas.setBackgroundImage(_img, function () {
             var oImage = canvas.backgroundImage;
             if (oImage && oImage.getElement()) {
@@ -42013,7 +42008,7 @@ var Text = function (_Component) {
           options.autofocus = true;
         }
 
-        newText = new _fabric.fabric.IText(text, styles);
+        newText = new _fabric.fabric.IText(text, Object.assign({}, styles, { paintFirst: 'stroke' }));
         selectionStyle = _tuiCodeSnippet2.default.extend({}, selectionStyle, {
           originX: 'left',
           originY: 'top'
@@ -42080,11 +42075,17 @@ var Text = function (_Component) {
       var _this6 = this;
 
       return new _util.Promise(function (resolve) {
-        _tuiCodeSnippet2.default.forEach(styleObj, function (val, key) {
-          if (activeObj[key] === val && key !== 'fontSize') {
-            styleObj[key] = resetStyles[key] || '';
-          }
-        }, _this6);
+
+        // 这里将activeObj[key] === val 这种值置空， 会造成bug; 交给使用方主动清空
+        // snippet.forEach(
+        //   styleObj,
+        //   (val, key) => {
+        //     if (activeObj[key] === val && key !== 'fontSize') {
+        //       styleObj[key] = resetStyles[key] || '';
+        //     }
+        //   },
+        //   this
+        // );
 
         if ('textDecoration' in styleObj) {
           _tuiCodeSnippet2.default.extend(styleObj, _this6._getTextDecorationAdaptObject(styleObj.textDecoration));
@@ -44847,7 +44848,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
    * @param {Object} extendsOptions object for extends "options"
    * @override
    */
-  initialize: function initialize(canvas, options, extendsOptions) {
+  initialize: function initialize(canvas, canvasImage, options, extendsOptions) {
     options = _tuiCodeSnippet2.default.extend(options, extendsOptions);
     options.type = 'cropzone';
 
@@ -44855,6 +44856,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
     this._addEventHandler();
 
     this.canvas = canvas;
+    this.canvasImage = canvasImage;
     this.options = options;
   },
   canvasEventDelegation: function canvasEventDelegation(eventName) {
@@ -45124,9 +45126,10 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         width = this.width,
         left = this.left,
         top = this.top;
-    var _canvas$backgroundIma = this.canvas.backgroundImage,
-        minLeft = _canvas$backgroundIma.left,
-        minTop = _canvas$backgroundIma.top;
+
+    var _canvasImage$getBound = this.canvasImage.getBoundingRect(),
+        minLeft = _canvasImage$getBound.left,
+        minTop = _canvasImage$getBound.top;
 
     var maxLeft = this.canvas.getWidth() - width - minLeft;
     var maxTop = this.canvas.getHeight() - height - minTop;
@@ -45235,14 +45238,18 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
    * get dimension backgroundImg
    * 返回顶点坐标
    */
-  _getBackgroundImgInfo: function _getBackgroundImgInfo() {
-    var backgroundImage = this.canvas.backgroundImage;
+  _getCanvasImageBoundingRect: function _getCanvasImageBoundingRect() {
+    var _canvasImage$getBound2 = this.canvasImage.getBoundingRect(),
+        left = _canvasImage$getBound2.left,
+        top = _canvasImage$getBound2.top,
+        width = _canvasImage$getBound2.width,
+        height = _canvasImage$getBound2.height;
 
     return {
-      top: backgroundImage.top,
-      left: backgroundImage.left,
-      right: backgroundImage.left + backgroundImage.width * backgroundImage.scaleX,
-      bottom: backgroundImage.top + backgroundImage.height * backgroundImage.scaleY
+      top: top,
+      left: left,
+      right: left + width,
+      bottom: top + height
     };
   },
 
@@ -45292,15 +45299,13 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         rectTop = _getCropzoneRectInfo2.rectTop,
         rectLeft = _getCropzoneRectInfo2.rectLeft,
         rectBottom = _getCropzoneRectInfo2.rectBottom,
-        rectRight = _getCropzoneRectInfo2.rectRight,
-        canvasWidth = _getCropzoneRectInfo2.canvasWidth,
-        canvasHeight = _getCropzoneRectInfo2.canvasHeight;
+        rectRight = _getCropzoneRectInfo2.rectRight;
 
-    var _getBackgroundImgInfo2 = this._getBackgroundImgInfo(),
-        bgTop = _getBackgroundImgInfo2.top,
-        bgLeft = _getBackgroundImgInfo2.left,
-        bgRight = _getBackgroundImgInfo2.right,
-        bgBottom = _getBackgroundImgInfo2.bottom;
+    var _getCanvasImageBoundi = this._getCanvasImageBoundingRect(),
+        bgTop = _getCanvasImageBoundi.top,
+        bgLeft = _getCanvasImageBoundi.left,
+        bgRight = _getCanvasImageBoundi.right,
+        bgBottom = _getCanvasImageBoundi.bottom;
 
     var resizeInfoMap = {
       tl: {
@@ -46045,12 +46050,17 @@ var Graphics = function () {
     this._attachZoomEvents();
   }
 
-  /**
-   * Destroy canvas element
-   */
-
-
   _createClass(Graphics, [{
+    key: 'getFabric',
+    value: function getFabric() {
+      return _fabric.fabric;
+    }
+
+    /**
+     * Destroy canvas element
+     */
+
+  }, {
     key: 'destroy',
     value: function destroy() {
       var wrapperEl = this._canvas.wrapperEl;
@@ -46743,9 +46753,13 @@ var Graphics = function () {
           width = _canvasImage$getBound.width,
           height = _canvasImage$getBound.height;
 
+      var canvas = this.getCanvas();
+      var scale = Math.min(canvas.width / (width / canvasImage.scaleX), canvas.height / (height / canvasImage.scaleY), 1);
+      canvasImage.set({
+        scaleX: scale,
+        scaleY: scale
+      });
       // const maxDimension = this._calcMaxDimension(width, height);
-
-
       this.setCanvasCssDimension({
         width: this.cssMaxWidth + 'px',
         height: this.cssMaxHeight + 'px' // Set height '' for IE9
@@ -47632,7 +47646,7 @@ var Graphics = function () {
   }, {
     key: 'createObjectProperties',
     value: function createObjectProperties(obj) {
-      var predefinedKeys = ['left', 'top', 'width', 'height', 'fill', 'stroke', 'strokeWidth', 'opacity', 'angle', 'scaleX', 'scaleY'];
+      var predefinedKeys = ['left', 'top', 'width', 'height', 'fill', 'stroke', 'strokeWidth', 'opacity', 'angle', 'scaleX', 'scaleY', 'shadow'];
       var props = {
         id: stamp(obj),
         type: obj.type

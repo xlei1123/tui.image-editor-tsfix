@@ -102,10 +102,11 @@ declare namespace tuiImageEditor {
     textDecoration?: string;
     strokeWidth?: number;
     stroke?: string;
-    shadow?: string;
+    shadow?: any;
     textBackgroundColor?: string;
     linethrough?: boolean;
     angle?: number;
+    opacity: number;
   }
 
   interface IRectConfig {
@@ -238,7 +239,7 @@ declare namespace tuiImageEditor {
     usageStatistics?: boolean;
     selectionStyle?: ISelectionStyleConfig;
     initFabricControl?: (ctx: CanvasRenderingContext2D, fabric: any) => void;
-    initCropControl?: () => {
+    initCropControl?: (ctx: CanvasRenderingContext2D, fabric: any) => {
       tl: Control,
       tr: Control,
       bl: Control,

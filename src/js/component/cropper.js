@@ -80,6 +80,7 @@ class Cropper extends Component {
       return;
     }
     const canvas = this.getCanvas();
+    const canvasImage = this.getCanvasImage();
 
     canvas.forEachObject((obj) => {
       // {@link http://fabricjs.com/docs/fabric.Object.html#evented}
@@ -88,6 +89,7 @@ class Cropper extends Component {
 
     this._cropzone = new Cropzone(
       canvas,
+      canvasImage,
       snippet.extend(
         {
           left: 0,
@@ -334,23 +336,22 @@ class Cropper extends Component {
       free = 1
     }
     const canvas = this.getCanvas();
+    const canvasImage = this.getCanvasImage();
     const originalWidth = canvas.getWidth();
     const originalHeight = canvas.getHeight();
-    const { height: bgImgHeight, width: bgImgWidth, scaleX, scaleY } = canvas.backgroundImage;
-    const canvasBgImgWidth = bgImgWidth * scaleX;
-    const canvasBgImgHeight = bgImgHeight * scaleY;
+    const { height: bgImgHeight, width: bgImgWidth } = canvasImage.getBoundingRect();
     // 撑满的那一个值
-    const standardSize = Math.max(canvasBgImgWidth, canvasBgImgHeight);
+    const standardSize = Math.max(bgImgWidth, bgImgHeight);
     // <=1
     const getScale = (value, orignalValue) => (value > orignalValue ? orignalValue / value : 1);
     // @layxiang 自由裁剪
     let width = standardSize * (free || presetRatio);
     let height = standardSize;
 
-    const scaleWidth = getScale(width, canvasBgImgWidth);
+    const scaleWidth = getScale(width, bgImgWidth);
     [width, height] = snippet.map([width, height], (sizeValue) => sizeValue * scaleWidth);
 
-    const scaleHeight = getScale(height, canvasBgImgHeight);
+    const scaleHeight = getScale(height, bgImgHeight);
     [width, height] = snippet.map([width, height], (sizeValue) =>
       fixFloatingPoint(sizeValue * scaleHeight)
     );

@@ -44,7 +44,7 @@ class ImageLoader extends Component {
     } else {
       promise = this._setBackgroundImage(img).then((oImage) => {
         this.setCanvasImage(imageName, oImage);
-        this.adjustCanvasDimension(oImage);
+        this.adjustCanvasDimension();
 
         return oImage;
       });
@@ -71,11 +71,6 @@ class ImageLoader extends Component {
         height: this.graphics.cssMaxHeight,
       });
       fabric.Image.fromURL(img, (_img, isError) => {
-        const scale = Math.min(canvas.width / _img.width, canvas.height / _img.height, 1);
-        _img.set({
-          scaleX: scale,
-          scaleY: scale,
-        });
         canvas.setBackgroundImage(
           _img,
           () => {

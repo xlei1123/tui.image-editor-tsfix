@@ -162,6 +162,10 @@ class Graphics {
     this._attachZoomEvents();
   }
 
+  getFabric() {
+    return fabric;
+  }
+
   /**
    * Destroy canvas element
    */
@@ -725,17 +729,22 @@ class Graphics {
   /**
    * Adjust canvas dimension with scaling image
    */
-  adjustCanvasDimension(oImage) {
-    this.adjustCanvasDimensionBase(this.canvasImage, oImage);
+  adjustCanvasDimension() {
+    this.adjustCanvasDimensionBase(this.canvasImage);
   }
 
-  adjustCanvasDimensionBase(canvasImage = null, oImage) {
+  adjustCanvasDimensionBase(canvasImage = null) {
     if (!canvasImage) {
       canvasImage = this.canvasImage;
     }
 
     const { width, height } = canvasImage.getBoundingRect();
-
+    const canvas = this.getCanvas();
+    const scale = Math.min(canvas.width / (width / canvasImage.scaleX), canvas.height / (height / canvasImage.scaleY), 1);
+    canvasImage.set({
+      scaleX: scale,
+      scaleY: scale,
+    });
     // const maxDimension = this._calcMaxDimension(width, height);
     this.setCanvasCssDimension({
       width: `${this.cssMaxWidth}px`,
@@ -1469,7 +1478,8 @@ class Graphics {
       'opacity',
       'angle',
       'scaleX',
-      'scaleY'
+      'scaleY',
+      'shadow',
     ];
     const props = {
       id: stamp(obj),
