@@ -106,7 +106,7 @@ declare namespace tuiImageEditor {
     textBackgroundColor?: string;
     linethrough?: boolean;
     angle?: number;
-    opacity: number;
+    opacity?: number;
   }
 
   interface IRectConfig {

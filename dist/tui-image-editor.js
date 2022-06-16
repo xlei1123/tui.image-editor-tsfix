@@ -40381,7 +40381,7 @@ var ImageLoader = function (_Component) {
       } else {
         promise = this._setBackgroundImage(img).then(function (oImage) {
           _this2.setCanvasImage(imageName, oImage);
-          _this2.adjustCanvasDimension(oImage);
+          _this2.adjustCanvasDimension();
 
           return oImage;
         });
@@ -46736,14 +46736,13 @@ var Graphics = function () {
 
   }, {
     key: 'adjustCanvasDimension',
-    value: function adjustCanvasDimension(oImage) {
-      this.adjustCanvasDimensionBase(this.canvasImage, oImage);
+    value: function adjustCanvasDimension() {
+      this.adjustCanvasDimensionBase(this.canvasImage);
     }
   }, {
     key: 'adjustCanvasDimensionBase',
     value: function adjustCanvasDimensionBase() {
       var canvasImage = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-      var oImage = arguments[1];
 
       if (!canvasImage) {
         canvasImage = this.canvasImage;
