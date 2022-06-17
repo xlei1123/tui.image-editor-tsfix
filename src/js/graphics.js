@@ -1516,7 +1516,9 @@ class Graphics {
       'textDecoration',
       'fontWeight',
       'scaleX',
-      'scaleY'
+      'scaleY',
+      'underline',
+      'linethrough',
     ];
     const props = {};
     extend(props, getProperties(obj, predefinedKeys));

@@ -107,6 +107,8 @@ declare namespace tuiImageEditor {
     linethrough?: boolean;
     angle?: number;
     opacity?: number;
+    underline?: boolean;
+    linethrough?: boolean;
   }
 
   interface IRectConfig {
