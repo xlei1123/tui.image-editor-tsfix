@@ -47675,7 +47675,7 @@ var Graphics = function () {
   }, {
     key: '_createTextProperties',
     value: function _createTextProperties(obj) {
-      var predefinedKeys = ['text', 'fontFamily', 'fontSize', 'fontStyle', 'textAlign', 'textDecoration', 'fontWeight', 'scaleX', 'scaleY'];
+      var predefinedKeys = ['text', 'fontFamily', 'fontSize', 'fontStyle', 'textAlign', 'textDecoration', 'fontWeight', 'scaleX', 'scaleY', 'underline', 'linethrough'];
       var props = {};
       extend(props, (0, _util.getProperties)(obj, predefinedKeys));
 
