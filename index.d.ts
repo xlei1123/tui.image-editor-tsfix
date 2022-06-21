@@ -1,6 +1,8 @@
 // Type definitions for TOAST UI Image Editor v3.15.0
 // TypeScript Version: 3.2.2
 
+import { Control } from "fabric/fabric-impl";
+
 declare namespace tuiImageEditor {
   type AngleType = number;
 
@@ -100,10 +102,13 @@ declare namespace tuiImageEditor {
     textDecoration?: string;
     strokeWidth?: number;
     stroke?: string;
-    shadow?: string;
+    shadow?: any;
     textBackgroundColor?: string;
     linethrough?: boolean;
     angle?: number;
+    opacity?: number;
+    underline?: boolean;
+    linethrough?: boolean;
   }
 
   interface IRectConfig {
@@ -235,6 +240,13 @@ declare namespace tuiImageEditor {
     cssMaxHeight?: number;
     usageStatistics?: boolean;
     selectionStyle?: ISelectionStyleConfig;
+    initFabricControl?: (ctx: CanvasRenderingContext2D, fabric: any) => void;
+    initCropControl?: (ctx: CanvasRenderingContext2D, fabric: any) => {
+      tl: Control,
+      tr: Control,
+      bl: Control,
+      br: Control
+    }
   }
 
   interface IUIDimension {

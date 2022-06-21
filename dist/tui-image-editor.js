@@ -38935,6 +38935,7 @@ var Cropper = function (_Component) {
       mousemove: _this._onFabricMouseMove.bind(_this),
       mouseup: _this._onFabricMouseUp.bind(_this)
     };
+    _this.initCropControl = graphics.initCropControl;
     return _this;
   }
 
@@ -38950,13 +38951,14 @@ var Cropper = function (_Component) {
         return;
       }
       var canvas = this.getCanvas();
+      var canvasImage = this.getCanvasImage();
 
       canvas.forEachObject(function (obj) {
         // {@link http://fabricjs.com/docs/fabric.Object.html#evented}
         obj.evented = false;
       });
 
-      this._cropzone = new _cropzone2.default(canvas, _tuiCodeSnippet2.default.extend({
+      this._cropzone = new _cropzone2.default(canvas, canvasImage, _tuiCodeSnippet2.default.extend({
         left: 0,
         top: 0,
         width: 0.5,
@@ -38966,7 +38968,7 @@ var Cropper = function (_Component) {
         cornerColor: 'black',
         fill: 'transparent'
       }, _consts.CROPZONE_DEFAULT_OPTIONS, this.graphics.cropSelectionStyle));
-
+      if (this.initCropControl) this._cropzone.controls = this.initCropControl;
       canvas.discardActiveObject();
       canvas.add(this._cropzone);
       // @layxiang 去掉鼠标拖动自由裁剪
@@ -39153,10 +39155,11 @@ var Cropper = function (_Component) {
       if (containsCropzone) {
         canvas.remove(this._cropzone);
       }
-
       var imageData = {
         imageName: this.getImageName(),
-        url: canvas.toDataURL(cropRect)
+        url: canvas.toDataURL(Object.assign({}, cropRect, {
+          multiplier: 1 / canvas.backgroundImage.scaleX
+        }))
       };
 
       if (containsCropzone) {
@@ -39228,18 +39231,17 @@ var Cropper = function (_Component) {
         free = 1;
       }
       var canvas = this.getCanvas();
+      var canvasImage = this.getCanvasImage();
       var originalWidth = canvas.getWidth();
       var originalHeight = canvas.getHeight();
-      var _canvas$backgroundIma = canvas.backgroundImage,
-          bgImgHeight = _canvas$backgroundIma.height,
-          bgImgWidth = _canvas$backgroundIma.width,
-          scaleX = _canvas$backgroundIma.scaleX,
-          scaleY = _canvas$backgroundIma.scaleY;
 
-      var canvasBgImgWidth = bgImgWidth * scaleX;
-      var canvasBgImgHeight = bgImgHeight * scaleY;
+      var _canvasImage$getBound = canvasImage.getBoundingRect(),
+          bgImgHeight = _canvasImage$getBound.height,
+          bgImgWidth = _canvasImage$getBound.width;
       // 撑满的那一个值
-      var standardSize = Math.max(canvasBgImgWidth, canvasBgImgHeight);
+
+
+      var standardSize = Math.max(bgImgWidth, bgImgHeight);
       // <=1
       var getScale = function getScale(value, orignalValue) {
         return value > orignalValue ? orignalValue / value : 1;
@@ -39248,7 +39250,7 @@ var Cropper = function (_Component) {
       var width = standardSize * (free || presetRatio);
       var height = standardSize;
 
-      var scaleWidth = getScale(width, canvasBgImgWidth);
+      var scaleWidth = getScale(width, bgImgWidth);
 
       var _snippet$map = _tuiCodeSnippet2.default.map([width, height], function (sizeValue) {
         return sizeValue * scaleWidth;
@@ -39258,7 +39260,7 @@ var Cropper = function (_Component) {
       height = _snippet$map[1];
 
 
-      var scaleHeight = getScale(height, canvasBgImgHeight);
+      var scaleHeight = getScale(height, bgImgHeight);
 
       var _snippet$map2 = _tuiCodeSnippet2.default.map([width, height], function (sizeValue) {
         return (0, _util.fixFloatingPoint)(sizeValue * scaleHeight);
@@ -40379,7 +40381,7 @@ var ImageLoader = function (_Component) {
       } else {
         promise = this._setBackgroundImage(img).then(function (oImage) {
           _this2.setCanvasImage(imageName, oImage);
-          _this2.adjustCanvasDimension(oImage);
+          _this2.adjustCanvasDimension();
 
           return oImage;
         });
@@ -40407,15 +40409,10 @@ var ImageLoader = function (_Component) {
       return new _util.Promise(function (resolve, reject) {
         var canvas = _this3.getCanvas();
         canvas.setDimensions({
-          width: _this3.graphics.cssMaxWidth * 2,
-          height: _this3.graphics.cssMaxHeight * 2
+          width: _this3.graphics.cssMaxWidth,
+          height: _this3.graphics.cssMaxHeight
         });
         fabric.Image.fromURL(img, function (_img, isError) {
-          var scale = Math.min(canvas.width / _img.width, canvas.height / _img.height);
-          _img.set({
-            scaleX: scale,
-            scaleY: scale
-          });
           canvas.setBackgroundImage(_img, function () {
             var oImage = canvas.backgroundImage;
             if (oImage && oImage.getElement()) {
@@ -42011,7 +42008,7 @@ var Text = function (_Component) {
           options.autofocus = true;
         }
 
-        newText = new _fabric.fabric.IText(text, styles);
+        newText = new _fabric.fabric.IText(text, Object.assign({}, styles, { paintFirst: 'stroke' }));
         selectionStyle = _tuiCodeSnippet2.default.extend({}, selectionStyle, {
           originX: 'left',
           originY: 'top'
@@ -42078,11 +42075,17 @@ var Text = function (_Component) {
       var _this6 = this;
 
       return new _util.Promise(function (resolve) {
-        _tuiCodeSnippet2.default.forEach(styleObj, function (val, key) {
-          if (activeObj[key] === val && key !== 'fontSize') {
-            styleObj[key] = resetStyles[key] || '';
-          }
-        }, _this6);
+
+        // 这里将activeObj[key] === val 这种值置空， 会造成bug; 交给使用方主动清空
+        // snippet.forEach(
+        //   styleObj,
+        //   (val, key) => {
+        //     if (activeObj[key] === val && key !== 'fontSize') {
+        //       styleObj[key] = resetStyles[key] || '';
+        //     }
+        //   },
+        //   this
+        // );
 
         if ('textDecoration' in styleObj) {
           _tuiCodeSnippet2.default.extend(styleObj, _this6._getTextDecorationAdaptObject(styleObj.textDecoration));
@@ -44845,7 +44848,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
    * @param {Object} extendsOptions object for extends "options"
    * @override
    */
-  initialize: function initialize(canvas, options, extendsOptions) {
+  initialize: function initialize(canvas, canvasImage, options, extendsOptions) {
     options = _tuiCodeSnippet2.default.extend(options, extendsOptions);
     options.type = 'cropzone';
 
@@ -44853,6 +44856,7 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
     this._addEventHandler();
 
     this.canvas = canvas;
+    this.canvasImage = canvasImage;
     this.options = options;
   },
   canvasEventDelegation: function canvasEventDelegation(eventName) {
@@ -45122,9 +45126,10 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         width = this.width,
         left = this.left,
         top = this.top;
-    var _canvas$backgroundIma = this.canvas.backgroundImage,
-        minLeft = _canvas$backgroundIma.left,
-        minTop = _canvas$backgroundIma.top;
+
+    var _canvasImage$getBound = this.canvasImage.getBoundingRect(),
+        minLeft = _canvasImage$getBound.left,
+        minTop = _canvasImage$getBound.top;
 
     var maxLeft = this.canvas.getWidth() - width - minLeft;
     var maxTop = this.canvas.getHeight() - height - minTop;
@@ -45233,14 +45238,18 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
    * get dimension backgroundImg
    * 返回顶点坐标
    */
-  _getBackgroundImgInfo: function _getBackgroundImgInfo() {
-    var backgroundImage = this.canvas.backgroundImage;
+  _getCanvasImageBoundingRect: function _getCanvasImageBoundingRect() {
+    var _canvasImage$getBound2 = this.canvasImage.getBoundingRect(),
+        left = _canvasImage$getBound2.left,
+        top = _canvasImage$getBound2.top,
+        width = _canvasImage$getBound2.width,
+        height = _canvasImage$getBound2.height;
 
     return {
-      top: backgroundImage.top,
-      left: backgroundImage.left,
-      right: backgroundImage.left + backgroundImage.width * backgroundImage.scaleX,
-      bottom: backgroundImage.top + backgroundImage.height * backgroundImage.scaleY
+      top: top,
+      left: left,
+      right: left + width,
+      bottom: top + height
     };
   },
 
@@ -45290,15 +45299,13 @@ var Cropzone = _fabric.fabric.util.createClass(_fabric.fabric.Rect,
         rectTop = _getCropzoneRectInfo2.rectTop,
         rectLeft = _getCropzoneRectInfo2.rectLeft,
         rectBottom = _getCropzoneRectInfo2.rectBottom,
-        rectRight = _getCropzoneRectInfo2.rectRight,
-        canvasWidth = _getCropzoneRectInfo2.canvasWidth,
-        canvasHeight = _getCropzoneRectInfo2.canvasHeight;
+        rectRight = _getCropzoneRectInfo2.rectRight;
 
-    var _getBackgroundImgInfo2 = this._getBackgroundImgInfo(),
-        bgTop = _getBackgroundImgInfo2.top,
-        bgLeft = _getBackgroundImgInfo2.left,
-        bgRight = _getBackgroundImgInfo2.right,
-        bgBottom = _getBackgroundImgInfo2.bottom;
+    var _getCanvasImageBoundi = this._getCanvasImageBoundingRect(),
+        bgTop = _getCanvasImageBoundi.top,
+        bgLeft = _getCanvasImageBoundi.left,
+        bgRight = _getCanvasImageBoundi.right,
+        bgBottom = _getCanvasImageBoundi.bottom;
 
     var resizeInfoMap = {
       tl: {
@@ -45936,7 +45943,9 @@ var Graphics = function () {
   function Graphics(element) {
     var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
         cssMaxWidth = _ref.cssMaxWidth,
-        cssMaxHeight = _ref.cssMaxHeight;
+        cssMaxHeight = _ref.cssMaxHeight,
+        initFabricControl = _ref.initFabricControl,
+        initCropControl = _ref.initCropControl;
 
     _classCallCheck(this, Graphics);
 
@@ -46031,6 +46040,8 @@ var Graphics = function () {
       onSelectionCreated: this._onSelectionCreated.bind(this)
     };
 
+    if (typeof initFabricControl === 'function') initFabricControl(this.ctx, _fabric.fabric);
+    if (typeof initCropControl === 'function') this.initCropControl = initCropControl(this.ctx, _fabric.fabric);
     this._setObjectCachingToFalse();
     this._setCanvasElement(element);
     this._createDrawingModeInstances();
@@ -46039,12 +46050,17 @@ var Graphics = function () {
     this._attachZoomEvents();
   }
 
-  /**
-   * Destroy canvas element
-   */
-
-
   _createClass(Graphics, [{
+    key: 'getFabric',
+    value: function getFabric() {
+      return _fabric.fabric;
+    }
+
+    /**
+     * Destroy canvas element
+     */
+
+  }, {
     key: 'destroy',
     value: function destroy() {
       var wrapperEl = this._canvas.wrapperEl;
@@ -46056,6 +46072,153 @@ var Graphics = function () {
 
       this._detachZoomEvents();
     }
+
+    /**
+     * fabric controls
+     */
+    // _initFabricControl() {
+    //   if (typeof initFabricControl === 'function') initFabricControl(ctx, fabric);
+    //   const deleteImgIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAOjSURBVHgB1Zq/UttAEMa/O8txqOI3iNMnE6fPTJxJRxrnCQxdOqACp0E0IXTwBJgnCFW6TEyRGpg8AM4ThFSEsdBl92zZlq1/d5aN+DUgWZK/1e3d3u5aIA9cVUWl3wRkHVI9hRJ1CDqnUB1fJHqA6tFnl4B/AZS7aPO5+RCwhUWveBskskFHDdigQIaoo3mMMTcgEA5sht/wvIgOVGnP1BAzAw76u8hd+BQCLrbLe9kvz8L+TQ1wTunql1gKNAqq9DbLaMi0C3DgtSCd8+WJZ1QN0jvHZ6+ZdmWyAewySnUW6jJx8HdK9XXotrHEu5AWT/5YBBLmRbQBPHRsfZEQYg3bzsnM6ZkLecKyz9+H2yQhcA3feTU9sWfngCj/KJx4RmvyZrwibICeMLQCFBWBOvb7bvhUALuOcK5QdNiVbpxncMU1H06MQMnFQ4BdqeJtBocDA/TbFy0Y0Hou8WfTwdVHB60X6fEw1/slNvSeDKMRKDVgiPtaoloBak+Azqo0EsHiO+/H9x++MzRgYhSGd4oNGFJ9HD7OakQgfpLrfzBH4A3/kQP3odltyNZ3f+ZcmhFR4pm9nz4saLAbSRv3YTq/fKx/y25EnHh+Bj/LispdU+o00JKsRixE/IC6Q7nrXNvkQMDxalhgJzhWWJR4mgd3NYEv3lUe0XeN3vi0EXHkIl4jejKvrUOcO02Tn3hC6EmcH2lG5CqeoXiQqwH6mSrhM+SP1JujnIhbbQJMI3YWJFXKcjEgTXxAvkbwJFbqEnOStM6bBDsLes6wZglbsgapuDhxMs+kVriUg0KrHVnFm247suNfSNyWT2GB6fZgMUaUu3KYmnVhCOcD06St83FGGOcDjKDKdltHYrAvncGQ6Xwga5CKMsIqH/C5LB8kNLfOoWk84Hyg95e+/NY8wgZGBPfb5QPUU0CoKkHlCoFdPAiol7DjrPN/Y+ezGIV7gxshQ8YG8GT2cYSioxDq4kTURvvnNjnyciDhO1TUmiBi/fI+FNKVWBN3baaYNaC90qMlagtF406sR7WcoiNI+1FH+1pRYC2fnMgdQ3KTrwhLq560ZTfu4/QuJXdrSup46T0D3dAgV2ZvSLwsC7p6R42PZfUOaJtMbd1mljarWaN70S6l3zrFogSXmb3FFN30pl6CYTk+RcVAOO8GXLMU1/7HHgNDGrqybR34RJdS2jMb4aMnIA9GxlCdddDRr4Xmiw5CJJD38D5+6yyQEyl3/oLCf3vTpFGrkv/0AAAAAElFTkSuQmCC';
+    //   const deleteImg = document.createElement('img');
+    //   deleteImg.src = deleteImgIcon;
+    //   const cloneImg = document.createElement('img');
+    //   cloneImg.src = deleteImgIcon;
+    //   function renderDelIcon(ctx, left, top, styleOverride, fabricObject) {
+    //     var size = 24;
+    //     ctx.save();
+    //     ctx.translate(left, top);
+    //     ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
+    //     ctx.drawImage(deleteImg, -size / 2, -size / 2, size, size);
+    //     ctx.restore();
+    //   }
+
+    //   function renderCopyIcon(ctx, left, top, styleOverride, fabricObject) {
+    //     var size = 24;
+    //     ctx.save();
+    //     ctx.translate(left, top);
+    //     ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
+    //     ctx.drawImage(cloneImg, -size / 2, -size / 2, size, size);
+    //     ctx.restore();
+    //   }
+    //   function deleteObject(target) {
+    //     const canvas = target.canvas;
+    //     canvas.remove(target);
+    //     canvas.requestRenderAll();
+    //   }
+    //   function cloneFabricObject(target) {
+    //     var canvas = target.canvas;
+    //     target.clone(function (cloned) {
+    //       cloned.left += 10;
+    //       cloned.top += 10;
+    //       canvas.add(cloned);
+    //     });
+    //   }
+    //   // 设置删除角标
+    //   fabric.Object.prototype.controls.tl = new fabric.Control({
+    //     x: -0.5,
+    //     y: -0.5,
+    //     cursorStyle: 'pointer',
+    //     mouseUpHandler: (eventData, fabricObject) => deleteObject(fabricObject.target),
+    //     render: renderDelIcon,
+    //     cornerSize: 24
+    //   });
+
+    //   // // 设置复制角标
+    //   fabric.Object.prototype.controls.bl = new fabric.Control({
+    //     x: -0.5,
+    //     y: 0.5,
+    //     cursorStyle: 'pointer',
+    //     mouseUpHandler: (eventData, fabricObject) => cloneFabricObject(fabricObject.target),
+    //     render: renderCopyIcon,
+    //     cornerSize: 24
+    //   });
+    //   // 设置旋转角标
+    //   fabric.Object.prototype.controls.tr = new fabric.Control({
+    //     x: 0.5,
+    //     y: -0.5,
+    //     cursorStyle: 'pointer',
+    //     actionHandler: fabric.controlsUtils.rotationWithSnapping,
+    //     cursorStyleHandler: fabric.controlsUtils.rotationStyleHandler,
+    //     render: renderCopyIcon,
+    //     cornerSize: 24
+    //   });
+    //   // 设置伸缩角标
+    //   fabric.Object.prototype.controls.br = new fabric.Control({
+    //     x: 0.5,
+    //     y: 0.5,
+    //     cursorStyle: 'se-resize',
+    //     actionHandler: fabric.controlsUtils.scalingEqually,
+    //     cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
+    //     render: renderCopyIcon,
+    //     cornerSize: 24
+    //   });
+
+    //   fabric.Object.prototype.setControlsVisibility({
+    //     bl: true, // 左下
+    //     br: true, // 右下
+    //     mb: false, // 下中
+    //     ml: false, // 中左
+    //     mr: false, // 中右
+    //     mt: false, // 上中
+    //     tl: true, // 上左
+    //     tr: true, // 上右
+    //     mtr: false // 旋转控制键
+    //   });
+    // }
+    /**
+     * 设置裁剪的控制器样式 示例
+     */
+    // setCropControl() {
+    //   const deleteImgIcon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAABYlAAAWJQFJUiTwAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAOjSURBVHgB1Zq/UttAEMa/O8txqOI3iNMnE6fPTJxJRxrnCQxdOqACp0E0IXTwBJgnCFW6TEyRGpg8AM4ThFSEsdBl92zZlq1/d5aN+DUgWZK/1e3d3u5aIA9cVUWl3wRkHVI9hRJ1CDqnUB1fJHqA6tFnl4B/AZS7aPO5+RCwhUWveBskskFHDdigQIaoo3mMMTcgEA5sht/wvIgOVGnP1BAzAw76u8hd+BQCLrbLe9kvz8L+TQ1wTunql1gKNAqq9DbLaMi0C3DgtSCd8+WJZ1QN0jvHZ6+ZdmWyAewySnUW6jJx8HdK9XXotrHEu5AWT/5YBBLmRbQBPHRsfZEQYg3bzsnM6ZkLecKyz9+H2yQhcA3feTU9sWfngCj/KJx4RmvyZrwibICeMLQCFBWBOvb7bvhUALuOcK5QdNiVbpxncMU1H06MQMnFQ4BdqeJtBocDA/TbFy0Y0Hou8WfTwdVHB60X6fEw1/slNvSeDKMRKDVgiPtaoloBak+Azqo0EsHiO+/H9x++MzRgYhSGd4oNGFJ9HD7OakQgfpLrfzBH4A3/kQP3odltyNZ3f+ZcmhFR4pm9nz4saLAbSRv3YTq/fKx/y25EnHh+Bj/LispdU+o00JKsRixE/IC6Q7nrXNvkQMDxalhgJzhWWJR4mgd3NYEv3lUe0XeN3vi0EXHkIl4jejKvrUOcO02Tn3hC6EmcH2lG5CqeoXiQqwH6mSrhM+SP1JujnIhbbQJMI3YWJFXKcjEgTXxAvkbwJFbqEnOStM6bBDsLes6wZglbsgapuDhxMs+kVriUg0KrHVnFm247suNfSNyWT2GB6fZgMUaUu3KYmnVhCOcD06St83FGGOcDjKDKdltHYrAvncGQ6Xwga5CKMsIqH/C5LB8kNLfOoWk84Hyg95e+/NY8wgZGBPfb5QPUU0CoKkHlCoFdPAiol7DjrPN/Y+ezGIV7gxshQ8YG8GT2cYSioxDq4kTURvvnNjnyciDhO1TUmiBi/fI+FNKVWBN3baaYNaC90qMlagtF406sR7WcoiNI+1FH+1pRYC2fnMgdQ3KTrwhLq560ZTfu4/QuJXdrSup46T0D3dAgV2ZvSLwsC7p6R42PZfUOaJtMbd1mljarWaN70S6l3zrFogSXmb3FFN30pl6CYTk+RcVAOO8GXLMU1/7HHgNDGrqybR34RJdS2jMb4aMnIA9GxlCdddDRr4Xmiw5CJJD38D5+6yyQEyl3/oLCf3vTpFGrkv/0AAAAAElFTkSuQmCC';
+    //   const cloneImg = document.createElement('img');
+    //   cloneImg.src = deleteImgIcon;
+    //   function renderCopyIcon(ctx, left, top, styleOverride, fabricObject) {
+    //     var size = 24;
+    //     ctx.save();
+    //     ctx.translate(left, top);
+    //     ctx.rotate(fabric.util.degreesToRadians(fabricObject.angle));
+    //     ctx.drawImage(cloneImg, -size / 2, -size / 2, size, size);
+    //     ctx.restore();
+    //   }
+    //   return {
+    //     tl: new fabric.Control({
+    //       x: -0.5,
+    //       y: -0.5,
+    //       cursorStyle: 'nw-resize',
+    //       actionHandler: fabric.controlsUtils.scalingEqually,
+    //       cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
+    //       render: renderCopyIcon,
+    //       cornerSize: 24
+    //     }),
+    //     tr: new fabric.Control({
+    //       x: 0.5,
+    //       y: -0.5,
+    //       cursorStyle: 'ne-resize',
+    //       actionHandler: fabric.controlsUtils.scalingEqually,
+    //       cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
+    //       render: renderCopyIcon,
+    //       cornerSize: 24
+    //     }),
+    //     bl: new fabric.Control({
+    //       x: -0.5,
+    //       y: 0.5,
+    //       cursorStyle: 'sw-resize',
+    //       actionHandler: fabric.controlsUtils.scalingEqually,
+    //       cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
+    //       render: renderCopyIcon,
+    //       cornerSize: 24
+    //     }),
+    //     br: new fabric.Control({
+    //       x: 0.5,
+    //       y: 0.5,
+    //       cursorStyle: 'se-resize',
+    //       actionHandler: fabric.controlsUtils.scalingEqually,
+    //       cursorStyleHandler: fabric.controlsUtils.scaleSkewCursorStyleHandler,
+    //       render: renderCopyIcon,
+    //       cornerSize: 24
+    //     }),
+    //   }
+    // }
 
     /**
      * Attach zoom events
@@ -46573,14 +46736,13 @@ var Graphics = function () {
 
   }, {
     key: 'adjustCanvasDimension',
-    value: function adjustCanvasDimension(oImage) {
-      this.adjustCanvasDimensionBase(this.canvasImage, oImage);
+    value: function adjustCanvasDimension() {
+      this.adjustCanvasDimensionBase(this.canvasImage);
     }
   }, {
     key: 'adjustCanvasDimensionBase',
     value: function adjustCanvasDimensionBase() {
       var canvasImage = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-      var oImage = arguments[1];
 
       if (!canvasImage) {
         canvasImage = this.canvasImage;
@@ -46590,9 +46752,13 @@ var Graphics = function () {
           width = _canvasImage$getBound.width,
           height = _canvasImage$getBound.height;
 
+      var canvas = this.getCanvas();
+      var scale = Math.min(canvas.width / (width / canvasImage.scaleX), canvas.height / (height / canvasImage.scaleY), 1);
+      canvasImage.set({
+        scaleX: scale,
+        scaleY: scale
+      });
       // const maxDimension = this._calcMaxDimension(width, height);
-
-
       this.setCanvasCssDimension({
         width: this.cssMaxWidth + 'px',
         height: this.cssMaxHeight + 'px' // Set height '' for IE9
@@ -47070,7 +47236,7 @@ var Graphics = function () {
 
       this._canvas = new _fabric.fabric.Canvas(canvasElement, {
         containerClass: 'tui-image-editor-canvas-container',
-        enableRetinaScaling: false,
+        enableRetinaScaling: true,
         fireRightClick: true
       });
     }
@@ -47479,7 +47645,7 @@ var Graphics = function () {
   }, {
     key: 'createObjectProperties',
     value: function createObjectProperties(obj) {
-      var predefinedKeys = ['left', 'top', 'width', 'height', 'fill', 'stroke', 'strokeWidth', 'opacity', 'angle', 'scaleX', 'scaleY'];
+      var predefinedKeys = ['left', 'top', 'width', 'height', 'fill', 'stroke', 'strokeWidth', 'opacity', 'angle', 'scaleX', 'scaleY', 'shadow'];
       var props = {
         id: stamp(obj),
         type: obj.type
@@ -47509,7 +47675,7 @@ var Graphics = function () {
   }, {
     key: '_createTextProperties',
     value: function _createTextProperties(obj) {
-      var predefinedKeys = ['text', 'fontFamily', 'fontSize', 'fontStyle', 'textAlign', 'textDecoration', 'fontWeight', 'scaleX', 'scaleY'];
+      var predefinedKeys = ['text', 'fontFamily', 'fontSize', 'fontStyle', 'textAlign', 'textDecoration', 'fontWeight', 'scaleX', 'scaleY', 'underline', 'linethrough'];
       var props = {};
       extend(props, (0, _util.getProperties)(obj, predefinedKeys));
 
@@ -50206,7 +50372,9 @@ var ImageEditor = function () {
      */
     this._graphics = new _graphics2.default(this.ui ? this.ui.getEditorArea() : wrapper, {
       cssMaxWidth: options.cssMaxWidth,
-      cssMaxHeight: options.cssMaxHeight
+      cssMaxHeight: options.cssMaxHeight,
+      initFabricControl: options.initFabricControl,
+      initCropControl: options.initCropControl
     });
 
     /**

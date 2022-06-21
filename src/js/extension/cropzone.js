@@ -66,7 +66,7 @@ const Cropzone = fabric.util.createClass(
      * @param {Object} extendsOptions object for extends "options"
      * @override
      */
-    initialize(canvas, options, extendsOptions) {
+    initialize(canvas, canvasImage, options, extendsOptions) {
       options = snippet.extend(options, extendsOptions);
       options.type = 'cropzone';
 
@@ -74,6 +74,7 @@ const Cropzone = fabric.util.createClass(
       this._addEventHandler();
 
       this.canvas = canvas;
+      this.canvasImage = canvasImage;
       this.options = options;
     },
     canvasEventDelegation(eventName) {
@@ -330,7 +331,7 @@ const Cropzone = fabric.util.createClass(
      */
     _onMoving() {
       const { height, width, left, top } = this;
-      const { left: minLeft, top: minTop } = this.canvas.backgroundImage;
+      const { left: minLeft, top: minTop, } = this.canvasImage.getBoundingRect();
       const maxLeft = this.canvas.getWidth() - width - minLeft;
       const maxTop = this.canvas.getHeight() - height - minTop;
       this.left = clamp(left, minLeft, maxLeft);
@@ -421,13 +422,13 @@ const Cropzone = fabric.util.createClass(
      * get dimension backgroundImg
      * 返回顶点坐标
      */
-    _getBackgroundImgInfo() {
-      const { backgroundImage } = this.canvas;
+    _getCanvasImageBoundingRect() {
+      const { left, top, width, height } = this.canvasImage.getBoundingRect();
       return {
-        top: backgroundImage.top,
-        left: backgroundImage.left,
-        right: backgroundImage.left + backgroundImage.width*backgroundImage.scaleX,
-        bottom: backgroundImage.top + backgroundImage.height*backgroundImage.scaleY,
+        top: top,
+        left: left,
+        right: left + width,
+        bottom: top + height,
       }
     },
     /**
@@ -470,10 +471,8 @@ const Cropzone = fabric.util.createClass(
         rectLeft,
         rectBottom,
         rectRight,
-        canvasWidth,
-        canvasHeight,
       } = this._getCropzoneRectInfo();
-      const { top: bgTop, left: bgLeft, right: bgRight, bottom: bgBottom } = this._getBackgroundImgInfo();
+      const { top: bgTop, left: bgLeft, right: bgRight, bottom: bgBottom } = this._getCanvasImageBoundingRect();
       const resizeInfoMap = {
         tl: {
           width: rectRight - x,

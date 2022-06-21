@@ -209,7 +209,7 @@ class Text extends Component {
         options.autofocus = true;
       }
 
-      newText = new fabric.IText(text, styles);
+      newText = new fabric.IText(text, Object.assign({}, styles, {paintFirst: 'stroke'}));
       selectionStyle = snippet.extend({}, selectionStyle, {
         originX: 'left',
         originY: 'top',
@@ -266,15 +266,17 @@ class Text extends Component {
    */
   setStyle(activeObj, styleObj) {
     return new Promise((resolve) => {
-      snippet.forEach(
-        styleObj,
-        (val, key) => {
-          if (activeObj[key] === val && key !== 'fontSize') {
-            styleObj[key] = resetStyles[key] || '';
-          }
-        },
-        this
-      );
+
+      // 这里将activeObj[key] === val 这种值置空， 会造成bug; 交给使用方主动清空
+      // snippet.forEach(
+      //   styleObj,
+      //   (val, key) => {
+      //     if (activeObj[key] === val && key !== 'fontSize') {
+      //       styleObj[key] = resetStyles[key] || '';
+      //     }
+      //   },
+      //   this
+      // );
 
       if ('textDecoration' in styleObj) {
         snippet.extend(styleObj, this._getTextDecorationAdaptObject(styleObj.textDecoration));
