@@ -38972,7 +38972,7 @@ var Cropper = function (_Component) {
       canvas.discardActiveObject();
       canvas.add(this._cropzone);
       // @layxiang 去掉鼠标拖动自由裁剪
-      canvas.on('mouse:down', this._listeners.mousedown);
+      // canvas.on('mouse:down', this._listeners.mousedown);
       canvas.selection = false;
       // canvas.defaultCursor = 'crosshair';
       _fabric.fabric.util.addListener(document, 'keydown', this._listeners.keydown);
